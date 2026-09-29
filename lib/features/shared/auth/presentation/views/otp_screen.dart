@@ -324,7 +324,9 @@ class _OtpScreenState extends State<OtpScreen> {
                                 ],
                               ),
                               child: Icon(
-                                Icons.mark_email_read_outlined,
+                                !widget.email.contains('@')
+                                    ? Icons.sms_rounded
+                                    : Icons.mark_email_read_outlined,
                                 size: 42,
                                 color: primaryColor,
                               ),
@@ -334,7 +336,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
                           // Welcome Headlines
                           Text(
-                            isArabic ? 'رمز التحقق (OTP)' : 'Verification Code',
+                            !widget.email.contains('@')
+                                ? (isArabic ? 'رمز التحقق (SMS)' : 'SMS Verification Code')
+                                : (isArabic ? 'رمز التحقق (الإيميل)' : 'Email Verification Code'),
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(
@@ -345,9 +349,13 @@ class _OtpScreenState extends State<OtpScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            isArabic
-                                ? 'أدخل رمز التحقق المكون من 6 أرقام المرسل إلى:\n${widget.email}'
-                                : 'Enter the 6-digit verification code sent to:\n${widget.email}',
+                            !widget.email.contains('@')
+                                ? (isArabic
+                                    ? 'أدخل رمز التحقق المكون من 6 أرقام المرسل عبر رسالة نصية SMS إلى:\n${widget.email}'
+                                    : 'Enter the 6-digit code sent via SMS to:\n${widget.email}')
+                                : (isArabic
+                                    ? 'أدخل رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الإلكتروني:\n${widget.email}'
+                                    : 'Enter the 6-digit verification code sent to:\n${widget.email}'),
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(

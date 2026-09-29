@@ -25,7 +25,13 @@ class AuthRemoteDataSourceImpl with DioErrorHandler implements AuthRemoteDataSou
   @override
   Future<void> login(String email) async {
     try {
-      await dio.post(ServerStrings.login, data: {'email': email});
+      final isPhone = !email.contains('@');
+      await dio.post(ServerStrings.login, data: {
+        'email': email,
+        'phone': email,
+        'identifier': email,
+        'channel': isPhone ? 'sms' : 'email',
+      });
     } on DioException catch (e) {
       throw handleDioError(e);
     }
@@ -34,7 +40,13 @@ class AuthRemoteDataSourceImpl with DioErrorHandler implements AuthRemoteDataSou
   @override
   Future<void> register(String email) async {
     try {
-      await dio.post(ServerStrings.register, data: {'email': email});
+      final isPhone = !email.contains('@');
+      await dio.post(ServerStrings.register, data: {
+        'email': email,
+        'phone': email,
+        'identifier': email,
+        'channel': isPhone ? 'sms' : 'email',
+      });
     } on DioException catch (e) {
       throw handleDioError(e);
     }
@@ -45,7 +57,13 @@ class AuthRemoteDataSourceImpl with DioErrorHandler implements AuthRemoteDataSou
     try {
       final response = await dio.post(
         '/api/v1/auth/login/verify',
-        data: {'email': email, 'otp': otp},
+        data: {
+          'email': email,
+          'phone': email,
+          'identifier': email,
+          'otp': otp,
+          'code': otp,
+        },
       );
       return UserModel.fromJson(response.data['data'] ?? response.data);
     } on DioException catch (e) {
@@ -58,7 +76,13 @@ class AuthRemoteDataSourceImpl with DioErrorHandler implements AuthRemoteDataSou
     try {
       final response = await dio.post(
         '/api/v1/auth/register/verify',
-        data: {'email': email, 'otp': otp},
+        data: {
+          'email': email,
+          'phone': email,
+          'identifier': email,
+          'otp': otp,
+          'code': otp,
+        },
       );
       return UserModel.fromJson(response.data['data'] ?? response.data);
     } on DioException catch (e) {

@@ -21,38 +21,58 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final FocusNode _emailFocus = FocusNode();
+  bool _isPhoneMode = true;
+  final _identifierController = TextEditingController();
+  final FocusNode _inputFocus = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _emailFocus.addListener(() {
+    _inputFocus.addListener(() {
       if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _emailFocus.dispose();
+    _identifierController.dispose();
+    _inputFocus.dispose();
     super.dispose();
   }
 
   void _handleLogin() {
-    final email = _emailController.text.trim();
+    final input = _identifierController.text.trim();
+    final isArabic = context.read<AppCubit>().state.locale.languageCode == 'ar';
 
-    if (email.isEmpty) {
+    if (input.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(S.of(context).email_hint),
+          content: Text(
+            _isPhoneMode
+                ? (isArabic ? 'يرجى إدخال رقم الجوال' : 'Please enter your phone number')
+                : S.of(context).email_hint,
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
 
-    context.read<AuthCubit>().login(email);
+    String finalIdentifier = input;
+    if (_isPhoneMode) {
+      String cleaned = input.replaceAll(RegExp(r'[\s\-\(\)]+'), '');
+      if (cleaned.startsWith('05')) {
+        finalIdentifier = '+966${cleaned.substring(1)}';
+      } else if (cleaned.startsWith('5')) {
+        finalIdentifier = '+966$cleaned';
+      } else if (!cleaned.startsWith('+966')) {
+        finalIdentifier = '+966$cleaned';
+      } else {
+        finalIdentifier = cleaned;
+      }
+    }
+
+    context.read<AuthCubit>().login(finalIdentifier);
   }
 
   @override
@@ -352,8 +372,146 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                // Dual Channel Selector Tabs
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.white.withOpacity(0.06)
+                                        : AppColors.surfaceContainerLow,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant
+                                          .withOpacity(0.5),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            if (!_isPhoneMode) {
+                                              setState(() {
+                                                _isPhoneMode = true;
+                                                _identifierController.clear();
+                                              });
+                                            }
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(milliseconds: 200),
+                                            padding: const EdgeInsets.symmetric(vertical: 10),
+                                            decoration: BoxDecoration(
+                                              color: _isPhoneMode
+                                                  ? primaryColor
+                                                  : Colors.transparent,
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: _isPhoneMode
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: primaryColor.withOpacity(0.3),
+                                                        blurRadius: 8,
+                                                        offset: const Offset(0, 2),
+                                                      )
+                                                    ]
+                                                  : [],
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.phone_android_rounded,
+                                                  size: 18,
+                                                  color: _isPhoneMode
+                                                      ? Colors.white
+                                                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  context.read<AppCubit>().state.locale.languageCode == 'ar'
+                                                      ? 'رقم الجوال (SMS)'
+                                                      : 'Phone (SMS)',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: _isPhoneMode
+                                                        ? Colors.white
+                                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            if (_isPhoneMode) {
+                                              setState(() {
+                                                _isPhoneMode = false;
+                                                _identifierController.clear();
+                                              });
+                                            }
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(milliseconds: 200),
+                                            padding: const EdgeInsets.symmetric(vertical: 10),
+                                            decoration: BoxDecoration(
+                                              color: !_isPhoneMode
+                                                  ? primaryColor
+                                                  : Colors.transparent,
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: !_isPhoneMode
+                                                  ? [
+                                                      BoxShadow(
+                                                        color: primaryColor.withOpacity(0.3),
+                                                        blurRadius: 8,
+                                                        offset: const Offset(0, 2),
+                                                      )
+                                                    ]
+                                                  : [],
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.mail_outline_rounded,
+                                                  size: 18,
+                                                  color: !_isPhoneMode
+                                                      ? Colors.white
+                                                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  context.read<AppCubit>().state.locale.languageCode == 'ar'
+                                                      ? 'البريد الإلكتروني'
+                                                      : 'Email',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: !_isPhoneMode
+                                                        ? Colors.white
+                                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
                                 Text(
-                                  S.of(context).email_label,
+                                  _isPhoneMode
+                                      ? (context.read<AppCubit>().state.locale.languageCode == 'ar'
+                                          ? 'رقم الجوال'
+                                          : 'Phone Number')
+                                      : S.of(context).email_label,
                                   style: Theme.of(context).textTheme.labelMedium
                                       ?.copyWith(
                                         color: onSurfaceColor,
@@ -362,7 +520,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 const SizedBox(height: 10),
 
-                                // Email Input Field
+                                // Dynamic Input Field (Phone or Email)
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
                                   decoration: BoxDecoration(
@@ -373,15 +531,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : AppColors.surfaceContainerLow,
                                     borderRadius: BorderRadius.circular(14),
                                     border: Border.all(
-                                      color: _emailFocus.hasFocus
+                                      color: _inputFocus.hasFocus
                                           ? primaryColor
                                           : Theme.of(context)
                                                 .colorScheme
                                                 .outline
                                                 .withOpacity(0.3),
-                                      width: _emailFocus.hasFocus ? 1.5 : 1.0,
+                                      width: _inputFocus.hasFocus ? 1.5 : 1.0,
                                     ),
-                                    boxShadow: _emailFocus.hasFocus
+                                    boxShadow: _inputFocus.hasFocus
                                         ? [
                                             BoxShadow(
                                               color: primaryColor.withOpacity(
@@ -394,13 +552,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : [],
                                   ),
                                   child: TextField(
-                                    controller: _emailController,
-                                    focusNode: _emailFocus,
-                                    keyboardType: TextInputType.emailAddress,
+                                    controller: _identifierController,
+                                    focusNode: _inputFocus,
+                                    keyboardType: _isPhoneMode
+                                        ? TextInputType.phone
+                                        : TextInputType.emailAddress,
+                                    textDirection: _isPhoneMode ? TextDirection.ltr : null,
                                     style: Theme.of(context).textTheme.bodyLarge
-                                        ?.copyWith(color: onSurfaceColor),
+                                        ?.copyWith(
+                                          color: onSurfaceColor,
+                                          fontWeight: _isPhoneMode ? FontWeight.bold : FontWeight.normal,
+                                        ),
                                     decoration: InputDecoration(
-                                      hintText: S.of(context).email_hint,
+                                      hintText: _isPhoneMode
+                                          ? '05X XXX XXXX'
+                                          : S.of(context).email_hint,
                                       hintStyle: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
@@ -410,15 +576,43 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 .onSurfaceVariant
                                                 .withOpacity(0.5),
                                           ),
-                                      prefixIcon: Icon(
-                                        Icons.mail_outline_rounded,
-                                        color: _emailFocus.hasFocus
-                                            ? primaryColor
-                                            : Theme.of(
-                                                context,
-                                              ).colorScheme.onSurfaceVariant,
-                                        size: 22,
-                                      ),
+                                      prefixIcon: _isPhoneMode
+                                          ? Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text('🇸🇦', style: TextStyle(fontSize: 18)),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    '+966',
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      color: onSurfaceColor,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    width: 1,
+                                                    height: 20,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .outline
+                                                        .withOpacity(0.3),
+                                                  ),
+                                                ],
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.mail_outline_rounded,
+                                              color: _inputFocus.hasFocus
+                                                  ? primaryColor
+                                                  : Theme.of(
+                                                      context,
+                                                    ).colorScheme.onSurfaceVariant,
+                                              size: 22,
+                                            ),
                                       border: InputBorder.none,
                                       contentPadding:
                                           const EdgeInsets.symmetric(
