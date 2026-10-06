@@ -171,6 +171,35 @@ class ProfileMobileView extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          _buildSettingsSection(
+            context,
+            children: [
+              _buildSettingsTile(
+                context,
+                icon: Icons.favorite_border_rounded,
+                title: isAr ? 'المفضلة' : 'Wishlist & Favorites',
+                subtitle: isAr ? 'الذبائح والمنتجات المحفوظة' : 'Your saved products',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () => context.push(Routes.favorites),
+              ),
+              const Divider(height: 1),
+              _buildSettingsTile(
+                context,
+                icon: Icons.chat_rounded,
+                customLeading: SvgPicture.asset(
+                  'assets/images/whatsapp_logo.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: const ColorFilter.mode(Color(0xFF25D366), BlendMode.srcIn),
+                ),
+                title: 'خدمة العملاء (واتساب)',
+                subtitle: 'تواصل مباشر مع خدمة عملاء ذبائح المملكة',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF16A34A)),
+                onTap: () => WhatsAppHelper.launchSupportChat(),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -394,6 +423,14 @@ class ProfileMobileView extends StatelessWidget {
                 icon: Icons.person_outline_rounded,
                 title: S.of(context).edit_profile,
                 onTap: () => EditProfileBottomSheet.show(context, profile),
+              ),
+              _buildSettingsTile(
+                context,
+                icon: Icons.favorite_border_rounded,
+                title: isAr ? 'المفضلة' : 'Wishlist & Favorites',
+                subtitle: isAr ? 'الذبائح والمنتجات المحفوظة' : 'Your saved products',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () => context.push(Routes.favorites),
               ),
               const Divider(height: 1),
               _buildSettingsTile(

@@ -23,6 +23,7 @@ import 'generated/l10n.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'core/services/notification_service.dart';
+import 'features/user/favorites/presentation/manager/favorites_cubit.dart';
 
 /// Top-level background message handler for Firebase Cloud Messaging (FCM).
 ///
@@ -63,16 +64,16 @@ void main() async {
   // Initialize dependency injection
   await configureDependencies();
 
-  if (!kIsWeb) {
-    await FirebaseMessaging.instance.requestPermission();
-    await NotificationService().init();
+  await FirebaseMessaging.instance.requestPermission();
+  await NotificationService().init();
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
-      NotificationService().showNotification(event);
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((event) {});
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  }
+  print('FCM Token: ${await FirebaseMessaging.instance.getToken()}');
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage event) {
+    NotificationService().showNotification(event);
+  });
+  FirebaseMessaging.onMessageOpenedApp.listen((event) {});
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(
     MultiBlocProvider(
@@ -80,6 +81,9 @@ void main() async {
         BlocProvider<AppCubit>(create: (context) => getIt<AppCubit>()),
         BlocProvider<AuthCubit>(
           create: (context) => getIt<AuthCubit>()..checkAuthStatus(),
+        ),
+        BlocProvider<FavoritesCubit>(
+          create: (context) => getIt<FavoritesCubit>()..loadFavorites(),
         ),
       ],
       child: const MyApp(),
@@ -139,9 +143,9 @@ class MyApp extends StatelessWidget {
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }

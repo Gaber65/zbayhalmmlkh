@@ -256,6 +256,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       actions: [
         IconButton(
+          icon: const Icon(Icons.favorite_outline_rounded),
+          tooltip: 'المفضلة',
+          onPressed: () => context.push(Routes.favorites),
+        ),
+        IconButton(
           icon: const Icon(AppIcons.notification),
           tooltip: S.of(context).notifications,
           onPressed: () => AdminNotificationsSheet.show(context),
@@ -430,13 +435,17 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, index) {
         final product = products[index];
         return ProductCard(
+          id: product.id,
+          product: product,
           imageUrl: product.imageUrl,
           title: product.title,
           subtitle: product.subtitle,
           price: product.price,
           originalPrice: product.originalPrice,
           tag: product.isOffer ? S.of(context).sale_tag : null,
-          onAddToCart: () {},
+          onAddToCart: () {
+            context.push(Routes.productDetails, extra: product);
+          },
           onTap: () {
             context.push(Routes.productDetails, extra: product);
           },
@@ -603,13 +612,17 @@ class _HomeScreenState extends State<HomeScreen> {
             child: SizedBox(
               width: 165,
               child: ProductCard(
+                id: product.id,
+                product: product,
                 imageUrl: product.imageUrl,
                 title: product.title,
                 subtitle: product.subtitle,
                 price: product.price,
                 originalPrice: product.originalPrice,
                 tag: product.isOffer ? S.of(context).sale_tag : null,
-                onAddToCart: () {},
+                onAddToCart: () {
+                  context.push(Routes.productDetails, extra: product);
+                },
                 onTap: () {
                   context.push(Routes.productDetails, extra: product);
                 },

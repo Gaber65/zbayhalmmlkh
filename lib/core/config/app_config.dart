@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class AppConfig {
   AppConfig._();
 
-  static const String appName = 'ذبائح الممكلة';
+  static const String appName = 'ذبائح المملكة';
   static const String appVersion = '1.0.0';
   static const String buildNumber = '1';
 
@@ -14,7 +14,8 @@ class AppConfig {
 
   // Local Server Configuration
   static const String localPort = '8069';
-  static const String localIp = '192.168.1.4'; // Tested & verified: returns 200 OK directly
+  static const String localIp =
+      '192.168.1.4'; // Tested & verified: returns 200 OK directly
 
   // API Configuration
   static String get baseUrl {
@@ -30,4 +31,3 @@ class AppConfig {
     return 'http://$localIp:$localPort';
   }
 }
-

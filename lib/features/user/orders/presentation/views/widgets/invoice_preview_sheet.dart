@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
 import 'package:dhabayih_lmamlaka/core/api/server_strings.dart';
@@ -31,23 +34,40 @@ class InvoicePreviewSheet extends StatelessWidget {
     );
   }
 
-  String _getPdfUrl() {
+  Future<String> _getPdfUrl() async {
     try {
       final dio = getIt<Dio>();
       final baseUrl = dio.options.baseUrl;
-      final authHeader = dio.options.headers['Authorization']?.toString() ?? '';
       String token = '';
-      if (authHeader.startsWith('Bearer ')) {
-        token = authHeader.substring(7).trim();
+
+      try {
+        final secureStorage = getIt<FlutterSecureStorage>();
+        final st = await secureStorage.read(key: 'access_token');
+        if (st != null && st.isNotEmpty) {
+          token = st;
+        }
+      } catch (_) {}
+
+      if (token.isEmpty) {
+        try {
+          final prefs = getIt<SharedPreferences>();
+          final cachedUserStr = prefs.getString('CACHED_USER');
+          if (cachedUserStr != null) {
+            final Map<String, dynamic> userMap = json.decode(cachedUserStr);
+            token = (userMap['access_token'] ?? userMap['token'] ?? userMap['accessToken'] ?? '') as String;
+          }
+        } catch (_) {}
       }
-      return '$baseUrl${ServerStrings.orderInvoicePdf(order.id)}?token=$token';
+
+      final queryParam = token.isNotEmpty ? '?token=${Uri.encodeComponent(token)}' : '';
+      return '$baseUrl${ServerStrings.orderInvoicePdf(order.id)}$queryParam';
     } catch (_) {
       return '';
     }
   }
 
   void _openPdf(BuildContext context) async {
-    final pdfUrl = _getPdfUrl();
+    final pdfUrl = await _getPdfUrl();
     if (pdfUrl.isNotEmpty) {
       final uri = Uri.parse(pdfUrl);
       if (await canLaunchUrl(uri)) {

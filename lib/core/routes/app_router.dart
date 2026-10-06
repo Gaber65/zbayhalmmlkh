@@ -20,6 +20,7 @@ import '../../features/user/catalog/presentation/views/categories_screen.dart';
 import '../../features/user/catalog/presentation/views/products_by_category_screen.dart';
 import '../../features/user/catalog/domain/entities/category.dart';
 import '../../features/user/search/presentation/views/search_screen.dart';
+import '../../features/user/favorites/presentation/views/favorites_screen.dart';
 import '../../features/user/offers/domain/entities/offer_entity.dart';
 import '../../features/user/offers/presentation/views/offer_details_screen.dart';
 import '../../features/user/profile/presentation/views/profile_screen.dart';
@@ -28,7 +29,6 @@ import '../../features/user/address/presentation/views/map_picker_screen.dart';
 import '../../features/user/address/presentation/views/address_form_screen.dart';
 import '../../features/user/address/presentation/manager/address_cubit.dart';
 import '../../features/user/orders/presentation/views/checkout_screen.dart';
-import '../../features/user/orders/presentation/manager/checkout_cubit.dart';
 import '../../features/user/orders/presentation/views/order_success_screen.dart';
 import '../../features/user/orders/presentation/views/orders_screen.dart';
 import '../../features/user/orders/presentation/views/order_details_screen.dart';
@@ -123,6 +123,10 @@ class AppRouter {
       GoRoute(
         path: Routes.search,
         builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: Routes.favorites,
+        builder: (context, state) => const FavoritesScreen(),
       ),
       GoRoute(
         path: Routes.offerDetails,

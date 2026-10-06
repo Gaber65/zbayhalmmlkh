@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dhabayih_lmamlaka/core/app_cubit/app_cubit.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
+import 'package:dhabayih_lmamlaka/core/utils/validators.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/ambient_glow.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/responsive_layout.dart';
 import 'package:dhabayih_lmamlaka/generated/l10n.dart';
@@ -29,9 +31,15 @@ class _OtpScreenState extends State<OtpScreen> {
   );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
+  Timer? _resendTimer;
+  int _resendCountdown = 60;
+  bool _canResend = false;
+  bool _isDistributing = false;
+
   @override
   void initState() {
     super.initState();
+    _startResendTimer();
     for (int i = 0; i < 6; i++) {
       _focusNodes[i].addListener(() {
         if (mounted) setState(() {});
@@ -39,8 +47,34 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
+  void _startResendTimer() {
+    setState(() {
+      _resendCountdown = 60;
+      _canResend = false;
+    });
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendCountdown > 1) {
+        if (mounted) {
+          setState(() {
+            _resendCountdown--;
+          });
+        }
+      } else {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _resendCountdown = 0;
+            _canResend = true;
+          });
+        }
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _resendTimer?.cancel();
     for (var c in _controllers) {
       c.dispose();
     }
@@ -51,11 +85,77 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   void _onChanged(String value, int index) {
-    if (value.isNotEmpty && index < 5) {
-      _focusNodes[index + 1].requestFocus();
-    } else if (value.isEmpty && index > 0) {
-      _focusNodes[index - 1].requestFocus();
+    if (_isDistributing) return;
+
+    if (value.isEmpty) {
+      if (index > 0) {
+        _focusNodes[index - 1].requestFocus();
+      }
+      return;
     }
+
+    final normalized = Validators.normalizeDigits(value);
+    final digits = normalized.replaceAll(RegExp(r'\D'), '');
+
+    if (digits.length > 1) {
+      _isDistributing = true;
+      for (int i = 0; i < digits.length && (index + i) < 6; i++) {
+        _controllers[index + i].text = digits[i];
+      }
+      _isDistributing = false;
+
+      final targetIndex = (index + digits.length).clamp(0, 5);
+      if (targetIndex < 5) {
+        _focusNodes[targetIndex].requestFocus();
+      } else {
+        _focusNodes[5].requestFocus();
+      }
+
+      if (_controllers.every((c) => c.text.isNotEmpty)) {
+        _handleVerify();
+      }
+      return;
+    }
+
+    if (digits.isNotEmpty) {
+      if (_controllers[index].text != digits) {
+        _isDistributing = true;
+        _controllers[index].text = digits;
+        _isDistributing = false;
+      }
+      if (index < 5) {
+        _focusNodes[index + 1].requestFocus();
+      } else {
+        _focusNodes[index].unfocus();
+        if (_controllers.every((c) => c.text.isNotEmpty)) {
+          _handleVerify();
+        }
+      }
+    }
+  }
+
+  void _handleResend() {
+    if (!_canResend) return;
+
+    if (widget.isLogin) {
+      context.read<AuthCubit>().login(widget.email);
+    } else {
+      context.read<AuthCubit>().register(widget.email);
+    }
+
+    _startResendTimer();
+
+    final isArabic = context.read<AppCubit>().state.locale.languageCode == 'ar';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isArabic
+              ? 'تم إعادة إرسال رمز التحقق بنجاح'
+              : 'Verification code resent successfully',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _handleVerify() {
@@ -449,7 +549,7 @@ class _OtpScreenState extends State<OtpScreen> {
                                             focusNode: _focusNodes[index],
                                             keyboardType: TextInputType.number,
                                             textAlign: TextAlign.center,
-                                            maxLength: 1,
+                                            maxLength: 6,
                                             onChanged: (val) =>
                                                 _onChanged(val, index),
                                             style: TextStyle(
@@ -460,6 +560,11 @@ class _OtpScreenState extends State<OtpScreen> {
                                             decoration: const InputDecoration(
                                               counterText: '',
                                               border: InputBorder.none,
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                              errorBorder: InputBorder.none,
+                                              disabledBorder: InputBorder.none,
+                                              filled: false,
                                               contentPadding: EdgeInsets.zero,
                                             ),
                                           ),
@@ -542,7 +647,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           ),
                           const SizedBox(height: 24),
 
-                          // Resend Code Option
+                          // Resend Code Option with Cooldown Timer
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -557,25 +662,23 @@ class _OtpScreenState extends State<OtpScreen> {
                                       ).colorScheme.onSurfaceVariant,
                                     ),
                               ),
+                              const SizedBox(width: 4),
                               TextButton(
-                                onPressed: () {
-                                  context.read<AuthCubit>().login(widget.email);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        isArabic
-                                            ? 'تم إعادة إرسال رمز التحقق'
-                                            : 'OTP code has been resent',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                },
+                                onPressed: _canResend ? _handleResend : null,
                                 child: Text(
-                                  isArabic ? 'إعادة الإرسال' : 'Resend Code',
+                                  _canResend
+                                      ? (isArabic ? 'إعادة الإرسال' : 'Resend Code')
+                                      : (isArabic
+                                          ? 'إعادة الإرسال ($_resendCountdown ث)'
+                                          : 'Resend in (${_resendCountdown}s)'),
                                   style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
-                                        color: primaryColor,
+                                        color: _canResend
+                                            ? primaryColor
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant
+                                                .withOpacity(0.5),
                                         fontWeight: FontWeight.bold,
                                       ),
                                 ),

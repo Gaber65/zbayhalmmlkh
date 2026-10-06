@@ -63,25 +63,23 @@ class _NativePaymentScreenState extends State<NativePaymentScreen> {
         Navigator.of(context).pop(result.id);
         return;
       }
-      if (result.id.isNotEmpty && result.status != PaymentStatus.failed) {
-        Navigator.of(context).pop(result.id);
+      if (result.status == PaymentStatus.initiated) {
+        debugPrint('NativePaymentScreen: payment is initiated, waiting for 3DS or authorization...');
         return;
       }
     } else if (result is Map) {
+      final status = result['status']?.toString().toLowerCase();
       final id = result['id']?.toString();
-      if (id != null && id.isNotEmpty) {
+      if ((status == 'paid' || status == 'authorized' || status == 'captured') &&
+          id != null && id.isNotEmpty) {
         Navigator.of(context).pop(id);
+        return;
+      }
+      if (status == 'initiated' || status == 'pending') {
+        debugPrint('NativePaymentScreen: payment status is $status, awaiting completion...');
         return;
       }
     }
-    try {
-      final dynamic dyn = result;
-      final String? id = dyn?.id?.toString();
-      if (id != null && id.isNotEmpty) {
-        Navigator.of(context).pop(id);
-        return;
-      }
-    } catch (_) {}
 
     // Show error message so user can see why it failed
     String errorMsg = 'تعذر إتمام الدفع بالبطاقة، يرجى التأكد من البيانات أو المحاولة ببطاقة أخرى';

@@ -10,6 +10,8 @@ import 'package:dhabayih_lmamlaka/features/shared/auth/presentation/manager/auth
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/price_widget.dart';
+import '../../../../favorites/presentation/manager/favorites_cubit.dart';
+import '../../../../favorites/presentation/manager/favorites_state.dart';
 import '../product_details_widgets.dart';
 
 class ProductMobileView extends StatefulWidget {
@@ -209,6 +211,40 @@ class _ProductMobileViewState extends State<ProductMobileView> {
               ),
               onPressed: () => context.pop(),
             ),
+            actions: [
+              Builder(
+                builder: (context) {
+                  bool isFav = false;
+                  try {
+                    final favState = context.watch<FavoritesCubit>().state;
+                    if (favState is FavoritesLoaded) {
+                      isFav = favState.favoriteIds.contains(product.id);
+                    }
+                  } catch (_) {}
+
+                  return Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 12),
+                    child: IconButton(
+                      icon: Container(
+                        decoration: BoxDecoration(
+                          color: cs.surface.withValues(alpha: 0.85),
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(
+                          isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                          color: isFav ? Colors.redAccent : cs.onSurface,
+                          size: 22,
+                        ),
+                      ),
+                      onPressed: () {
+                        context.read<FavoritesCubit>().toggleFavorite(product: product);
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dhabayih_lmamlaka/core/theme/app_icons.dart';
+import '../../features/user/favorites/presentation/manager/favorites_cubit.dart';
+import '../../features/user/favorites/presentation/manager/favorites_state.dart';
 import 'price_widget.dart';
 
 class ProductCard extends StatelessWidget {
+  final int? id;
+  final dynamic product;
   final String imageUrl;
   final String title;
   final String subtitle;
@@ -12,9 +17,13 @@ class ProductCard extends StatelessWidget {
   final String? tag;
   final VoidCallback onAddToCart;
   final VoidCallback onTap;
+  final bool? isFavorite;
+  final VoidCallback? onFavoriteToggle;
 
   const ProductCard({
     super.key,
+    this.id,
+    this.product,
     required this.imageUrl,
     required this.title,
     required this.subtitle,
@@ -23,6 +32,8 @@ class ProductCard extends StatelessWidget {
     this.tag,
     required this.onAddToCart,
     required this.onTap,
+    this.isFavorite,
+    this.onFavoriteToggle,
   });
 
   @override
@@ -30,6 +41,17 @@ class ProductCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hasDiscount = originalPrice != null && originalPrice! > price;
+
+    final effectiveId = id ?? (product != null ? (product is int ? product : (product.id ?? (product is Map ? product['id'] : null))) : null);
+    bool effectiveIsFav = isFavorite ?? false;
+    if (isFavorite == null && effectiveId != null) {
+      try {
+        final favState = context.watch<FavoritesCubit>().state;
+        if (favState is FavoritesLoaded) {
+          effectiveIsFav = favState.favoriteIds.contains(effectiveId);
+        }
+      } catch (_) {}
+    }
 
     return Material(
       color: Colors.transparent,
@@ -129,18 +151,46 @@ class ProductCard extends StatelessWidget {
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            if (onFavoriteToggle != null) {
+                              onFavoriteToggle!();
+                            } else if (effectiveId != null || product != null) {
+                              try {
+                                context.read<FavoritesCubit>().toggleFavorite(
+                                  product: product ?? effectiveId,
+                                  title: title,
+                                  price: price,
+                                  imageUrl: imageUrl,
+                                  subtitle: subtitle,
+                                );
+                              } catch (_) {}
+                            }
+                          },
                           customBorder: const CircleBorder(),
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
+                              color: effectiveIsFav
+                                  ? Colors.white
+                                  : Colors.black.withValues(alpha: 0.35),
                               shape: BoxShape.circle,
+                              boxShadow: effectiveIsFav
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.18),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
                             ),
-                            child: const Icon(
-                              Icons.favorite_border_rounded,
-                              size: 14,
-                              color: Colors.white,
+                            child: Icon(
+                              effectiveIsFav
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 15,
+                              color: effectiveIsFav ? Colors.redAccent : Colors.white,
                             ),
                           ),
                         ),

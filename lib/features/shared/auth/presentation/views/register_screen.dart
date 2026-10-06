@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dhabayih_lmamlaka/core/app_cubit/app_cubit.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
+import 'package:dhabayih_lmamlaka/core/utils/validators.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/ambient_glow.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/responsive_layout.dart';
 import 'package:dhabayih_lmamlaka/generated/l10n.dart';
@@ -49,7 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           content: Text(
             _isPhoneMode
                 ? (isArabic ? 'يرجى إدخال رقم الجوال' : 'Please enter your phone number')
-                : S.of(context).email_hint,
+                : (isArabic ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email'),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -57,18 +58,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    String finalIdentifier = input;
+    String finalIdentifier;
     if (_isPhoneMode) {
-      String cleaned = input.replaceAll(RegExp(r'[\s\-\(\)]+'), '');
-      if (cleaned.startsWith('05')) {
-        finalIdentifier = '+966${cleaned.substring(1)}';
-      } else if (cleaned.startsWith('5')) {
-        finalIdentifier = '+966$cleaned';
-      } else if (!cleaned.startsWith('+966')) {
-        finalIdentifier = '+966$cleaned';
-      } else {
-        finalIdentifier = cleaned;
+      final normalized = Validators.normalizeSaudiPhone(input);
+      if (normalized == null || !Validators.isValidSaudiPhone(normalized)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isArabic
+                  ? 'يرجى إدخال رقم جوال سعودي صحيح (مثال: 05XXXXXXXX)'
+                  : 'Please enter a valid Saudi mobile number (e.g. 05XXXXXXXX)',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
       }
+      finalIdentifier = normalized;
+    } else {
+      if (Validators.email(input) != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isArabic
+                  ? 'يرجى إدخال بريد إلكتروني صالح'
+                  : 'Please enter a valid email address',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      finalIdentifier = input;
     }
 
     context.read<AuthCubit>().register(finalIdentifier);
@@ -557,6 +578,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: TextField(
                                     controller: _identifierController,
                                     focusNode: _inputFocus,
+                                    inputFormatters: _isPhoneMode ? [SaudiPhoneInputFormatter()] : [],
                                     keyboardType: _isPhoneMode
                                         ? TextInputType.phone
                                         : TextInputType.emailAddress,
@@ -617,6 +639,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                               size: 22,
                                             ),
                                       border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      errorBorder: InputBorder.none,
+                                      disabledBorder: InputBorder.none,
+                                      filled: false,
                                       contentPadding:
                                           const EdgeInsets.symmetric(
                                             horizontal: 16,

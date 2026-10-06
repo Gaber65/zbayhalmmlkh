@@ -121,19 +121,17 @@ class _SearchScreenState extends State<SearchScreen> {
                 itemBuilder: (context, index) {
                   final product = state.results[index];
                   return ProductCard(
+                    id: product.id,
+                    product: product,
                     imageUrl: product.imageUrl.isNotEmpty ? product.imageUrl : 'https://via.placeholder.com/150',
                     title: product.title,
                     subtitle: product.subtitle,
                     price: product.price,
-                    onAddToCart: () {},
+                    onAddToCart: () {
+                      context.push(Routes.productDetails, extra: product);
+                    },
                     onTap: () {
-                      context.push(Routes.productDetails, extra: {
-                        'id': product.id,
-                        'title': product.title,
-                        'subtitle': product.subtitle,
-                        'price': product.price,
-                        'imageUrl': product.imageUrl,
-                      });
+                      context.push(Routes.productDetails, extra: product);
                     },
                   );
                 },

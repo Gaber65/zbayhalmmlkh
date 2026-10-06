@@ -15,6 +15,7 @@ class Routes {
   static const String categories = '/categories';
   static const String productsByCategory = '/products-by-category';
   static const String search = '/search';
+  static const String favorites = '/favorites';
   static const String offerDetails = '/offer-details';
   static const String adminDashboard = '/admin-dashboard';
   static const String adminOrderDetails = '/admin-order-details';

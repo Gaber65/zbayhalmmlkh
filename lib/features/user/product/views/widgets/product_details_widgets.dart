@@ -854,18 +854,22 @@ class CarcassSizesSelector extends StatelessWidget {
 
                 // Name and subtitle
                 Expanded(
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         size.name,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.bold,
                           color: isSelected ? const Color(0xFF166534) : cs.onSurface,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       if (size.subTitle != null && size.subTitle!.isNotEmpty) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(height: 2),
                         Text(
                           size.subTitle!,
                           style: TextStyle(
@@ -873,11 +877,14 @@ class CarcassSizesSelector extends StatelessWidget {
                             color: cs.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
 
                 // Price
                 Text(

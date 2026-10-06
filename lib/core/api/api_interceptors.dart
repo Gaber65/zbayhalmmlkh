@@ -17,7 +17,7 @@ class ApiInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     // Log request details
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print('📤 REQUEST[${options.method}] => PATH: ${options.path}');
+    print('📤 REQUEST[${options.method}] => URL: ${options.baseUrl}${options.path}');
     print('Headers: ${options.headers}');
     print('Query Parameters: ${options.queryParameters}');
     print('Body: ${options.data}');
@@ -31,7 +31,7 @@ class ApiInterceptor extends Interceptor {
     // Log response details
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     print(
-      '📥 RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}',
+      '📥 RESPONSE[${response.statusCode}] => URL: ${response.requestOptions.baseUrl}${response.requestOptions.path}',
     );
     print('Data: ${response.data}');
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -44,7 +44,7 @@ class ApiInterceptor extends Interceptor {
     // Log error details
     print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     print(
-      '❌ ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}',
+      '❌ ERROR[${err.response?.statusCode}] => URL: ${err.requestOptions.baseUrl}${err.requestOptions.path}',
     );
     print('Message: ${err.message}');
     print('Response: ${err.response?.data}');

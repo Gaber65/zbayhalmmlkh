@@ -7,7 +7,6 @@ import 'package:dhabayih_lmamlaka/generated/l10n.dart';
 import '../../../../domain/entities/category.dart';
 import '../../../manager/catalog_cubit.dart';
 import '../../../manager/catalog_state.dart';
-import '../../../../../cart/presentation/manager/cart_cubit.dart';
 
 class ProductsByCategoryMobileView extends StatefulWidget {
   final Category category;
@@ -22,21 +21,9 @@ class _ProductsByCategoryMobileViewState extends State<ProductsByCategoryMobileV
   final ScrollController _scrollController = ScrollController();
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      context.read<CatalogCubit>().fetchProductsByCategory(widget.category.id);
-    }
   }
 
   @override
@@ -127,6 +114,8 @@ class _ProductsByCategoryMobileViewState extends State<ProductsByCategoryMobileV
                 itemBuilder: (context, index) {
                   final product = products[index];
                   return ProductCard(
+                    id: product.id,
+                    product: product,
                     imageUrl: product.imageUrl,
                     title: product.title,
                     subtitle: product.subtitle,
@@ -134,10 +123,10 @@ class _ProductsByCategoryMobileViewState extends State<ProductsByCategoryMobileV
                     originalPrice: product.originalPrice,
                     tag: product.discountTag,
                     onAddToCart: () {
-                      context.read<CartCubit>().addToCart(productId: product.id, quantity: 1);
+                      context.push(Routes.productDetails, extra: product);
                     },
                     onTap: () {
-                      context.push(Routes.productDetails, extra: product.id);
+                      context.push(Routes.productDetails, extra: product);
                     },
                   );
                 },

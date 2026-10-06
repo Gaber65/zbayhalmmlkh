@@ -32,6 +32,10 @@ class ServerStrings {
   static const String checkout = '/api/v1/checkout';
   static const String paymentMethods = '/api/v1/payment-methods';
 
+  // Favorites
+  static const String favorites = '/api/v1/favorites';
+  static String removeFavorite(int productId) => '/api/v1/favorites/$productId';
+
 
   // 5. Coupons & Promo Codes
   static const String coupons = '/api/v1/coupons';
