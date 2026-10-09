@@ -29,6 +29,7 @@ jobs:
       # 4. تثبيت الحزم ومكتبات CocoaPods
       - name: Install Dependencies
         run: |
+          flutter config --no-enable-swift-package-manager
           flutter pub get
           cd ios
           pod install
@@ -41,7 +42,7 @@ jobs:
         run: |
           if [ -n "$SHOREBIRD_TOKEN" ]; then
             echo "🚀 SHOREBIRD_TOKEN detected! Building Shorebird Release for iOS..."
-            shorebird release ios --no-codesign
+            shorebird release ios --no-codesign --flutter-version=3.41.1
           else
             echo "⚠️ SHOREBIRD_TOKEN not found in secrets. Building standard unsigned release..."
             flutter build ios --release --no-codesign --config-only
