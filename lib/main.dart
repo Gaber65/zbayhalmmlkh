@@ -5,6 +5,7 @@
 /// and sets up the root widget tree with localizations and routing.
 library;
 
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -31,7 +32,43 @@ import 'features/user/favorites/presentation/manager/favorites_cubit.dart';
 /// in an isolated background thread when the app is in the background or terminated.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Handling a background message ${message.messageId}');
+  debugPrint('Handling a background message ${message.messageId}');
+}
+
+/// Safely initializes FCM and local notifications without blocking app startup
+/// or throwing unhandled exceptions if APNS tokens are unavailable (e.g., iOS sideloading).
+void _setupPushNotifications() {
+  Future.microtask(() async {
+    try {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      await NotificationService().init();
+
+      // On iOS, APNS token must be issued by Apple before querying the FCM token
+      if (!kIsWeb && Platform.isIOS) {
+        final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        if (apnsToken != null) {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          debugPrint('FCM Token: $fcmToken');
+        } else {
+          debugPrint('APNS token not available yet (normal for sideloaded apps)');
+        }
+      } else {
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        debugPrint('FCM Token: $fcmToken');
+      }
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage event) {
+        NotificationService().showNotification(event);
+      });
+      FirebaseMessaging.onMessageOpenedApp.listen((event) {});
+    } catch (e) {
+      debugPrint('Firebase messaging setup warning: $e');
+    }
+  });
 }
 
 /// The main entry point of the Flutter app.
@@ -64,16 +101,11 @@ void main() async {
   // Initialize dependency injection
   await configureDependencies();
 
-  await FirebaseMessaging.instance.requestPermission();
-  await NotificationService().init();
-
-  print('FCM Token: ${await FirebaseMessaging.instance.getToken()}');
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage event) {
-    NotificationService().showNotification(event);
-  });
-  FirebaseMessaging.onMessageOpenedApp.listen((event) {});
+  // Background message listener registration
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Safely initialize push notifications without crashing iOS if APNS token is pending/absent
+  _setupPushNotifications();
 
   runApp(
     MultiBlocProvider(

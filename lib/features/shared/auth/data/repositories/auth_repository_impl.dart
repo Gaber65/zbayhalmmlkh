@@ -24,6 +24,13 @@ class AuthRepositoryImpl implements AuthRepository {
   /// Automatically fetches the FCM token and registers the device with backend after successful OTP verification.
   Future<void> _registerFcmDeviceToken() async {
     try {
+      if (!kIsWeb && Platform.isIOS) {
+        final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        if (apnsToken == null) {
+          debugPrint('Skipping FCM registration: APNS token not available on iOS');
+          return;
+        }
+      }
       final fcmToken = await FirebaseMessaging.instance.getToken();
       if (fcmToken != null && fcmToken.isNotEmpty) {
         final deviceType = kIsWeb
