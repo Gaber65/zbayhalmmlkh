@@ -120,6 +120,9 @@ BannerModel _$BannerModelFromJson(Map<String, dynamic> json) => BannerModel(
   id: (json['id'] as num).toInt(),
   name: json['name'] as String,
   imageUrl: json['image_url'] as String?,
+  bannerType: json['banner_type'] as String?,
+  offerId: (json['offer_id'] as num?)?.toInt(),
+  deepLink: json['deep_link'] as String?,
 );
 
 Map<String, dynamic> _$BannerModelToJson(BannerModel instance) =>
@@ -127,6 +130,9 @@ Map<String, dynamic> _$BannerModelToJson(BannerModel instance) =>
       'id': instance.id,
       'name': instance.name,
       'image_url': instance.imageUrl,
+      'banner_type': instance.bannerType,
+      'offer_id': instance.offerId,
+      'deep_link': instance.deepLink,
     };
 
 HomeProductModel _$HomeProductModelFromJson(Map<String, dynamic> json) =>

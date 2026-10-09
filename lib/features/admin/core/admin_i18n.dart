@@ -243,6 +243,22 @@ class AdminI18n {
   String get pushSendBtn => isArabic ? 'إرسال الإشعار الآن' : 'Send Notification Now';
   String get pushSuccess => isArabic ? 'تم إرسال الإشعار بنجاح لجميع العملاء' : 'Notification broadcast sent successfully!';
   String get retry => isArabic ? 'إعادة المحاولة' : 'Retry';
+
+  // ── Settings View ─────────────────────────────────────────────────────────────
+  String get settingsTitle => isArabic ? 'إعدادات النظام وبرنامج الولاء' : 'System Settings & Loyalty Program';
+  String get settingsSubtitle => isArabic ? 'تحكم في قواعد اكتساب واستبدال النقاط وحوافز العملاء والتواصل' : 'Manage loyalty points rules, redemption, incentives and customer support';
+  String get loyaltyRulesTitle => isArabic ? 'قواعد النقاط والاستبدال' : 'Loyalty & Redemption Rules';
+  String get earningRateTitle => isArabic ? 'معدل الاكتساب (Earning Rate)' : 'Earning Rate';
+  String get earningRateFormula => isArabic ? 'المعادلة: النقاط المكتسبة = إجمالي الطلب (ر.س) * معدل الاكتساب' : 'Formula: Earned points = Order total (SAR) * Earning rate';
+  String get redemptionRateTitle => isArabic ? 'معدل الاستبدال (Redemption Rate)' : 'Redemption Rate';
+  String get redemptionRateFormula => isArabic ? 'المعادلة: قيمة الخصم (ر.س) = النقاط المستبدلة * معدل الاستبدال' : 'Formula: Discount (SAR) = Redeemed points * Redemption rate';
+  String get minRedeemTitle => isArabic ? 'الحد الأدنى للنقاط للاستبدال' : 'Minimum Points for Redemption';
+  String get contactSettingsTitle => isArabic ? 'إعدادات التواصل وخدمة العملاء' : 'Contact & Customer Support Settings';
+  String get enableWhatsappSupport => isArabic ? 'تفعيل الدعم عبر واتساب' : 'Enable WhatsApp Support';
+  String get whatsappNumberTitle => isArabic ? 'رقم الواتساب الرسمي' : 'Official WhatsApp Number';
+  String get defaultWhatsappMsg => isArabic ? 'الرسالة التلقائية للواتساب' : 'Default WhatsApp Message';
+  String get phoneSupportTitle => isArabic ? 'رقم الهاتف المباشر' : 'Direct Phone Number';
+  String get saveSettingsSuccess => isArabic ? 'تم حفظ الإعدادات بنجاح 🎉' : 'Settings saved successfully 🎉';
 }
 
 

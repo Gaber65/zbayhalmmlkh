@@ -370,13 +370,21 @@ class _AdminNotificationsSheetState extends State<AdminNotificationsSheet> {
                       context: context,
                       builder: (_) => BroadcastNotificationDialog(
                         onSend: (title, body, topic) async {
-                          return await _repository
-                              .sendBroadcastNotification(
-                                title: title,
-                                body: body,
-                                topic: topic,
-                              )
-                              .then((res) => res.getOrElse(() => false));
+                          final res = await _repository.sendBroadcastNotification(
+                            title: title,
+                            body: body,
+                            topic: topic,
+                          );
+                          final success = res.getOrElse(() => false);
+                          if (success && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(i18n.pushSuccess),
+                                backgroundColor: const Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                          return success;
                         },
                       ),
                     ).then((_) => _fetchNotifications());

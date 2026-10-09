@@ -137,7 +137,7 @@ class ProfileMobileView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isAr ? '🇺🇦 EN' : '🇸🇦 AR',
+                    isAr ? '🇬🇧 EN' : '🇸🇦 AR',
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -193,8 +193,8 @@ class ProfileMobileView extends StatelessWidget {
                   height: 22,
                   colorFilter: const ColorFilter.mode(Color(0xFF25D366), BlendMode.srcIn),
                 ),
-                title: 'خدمة العملاء (واتساب)',
-                subtitle: 'تواصل مباشر مع خدمة عملاء ذبائح المملكة',
+                title: isAr ? 'خدمة العملاء (واتساب)' : 'Customer Support (WhatsApp)',
+                subtitle: isAr ? 'تواصل مباشر مع خدمة عملاء ذبائح المملكة' : 'Direct chat with Dhabayih Al-Mamlaka support',
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF16A34A)),
                 onTap: () => WhatsAppHelper.launchSupportChat(),
               ),
@@ -371,7 +371,7 @@ class ProfileMobileView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isAr ? '🇺🇦 EN' : '🇸🇦 AR',
+                    isAr ? '🇬🇧 EN' : '🇸🇦 AR',
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -456,8 +456,8 @@ class ProfileMobileView extends StatelessWidget {
                   height: 22,
                   colorFilter: const ColorFilter.mode(Color(0xFF25D366), BlendMode.srcIn),
                 ),
-                title: 'خدمة العملاء (واتساب)',
-                subtitle: 'تواصل مباشر مع خدمة عملاء ذبائح المملكة',
+                title: isAr ? 'خدمة العملاء (واتساب)' : 'Customer Support (WhatsApp)',
+                subtitle: isAr ? 'تواصل مباشر مع خدمة عملاء ذبائح المملكة' : 'Direct chat with Dhabayih Al-Mamlaka support',
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF16A34A)),
                 onTap: () => WhatsAppHelper.launchSupportChat(),
               ),
@@ -466,8 +466,8 @@ class ProfileMobileView extends StatelessWidget {
                 _buildSettingsTile(
                   context,
                   icon: Icons.admin_panel_settings_rounded,
-                  title: 'لوحة إدارة التطبيق (الأدمن)',
-                  subtitle: 'إدارة المنتجات، الطلبات، الأقسام، والكوبونات',
+                  title: isAr ? 'لوحة إدارة التطبيق (الأدمن)' : 'Admin Control Panel (ERP)',
+                  subtitle: isAr ? 'إدارة المنتجات، الطلبات، الأقسام، والكوبونات' : 'Manage products, orders, categories & coupons',
                   trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFC59A3F)),
                   onTap: () => context.go(Routes.adminDashboard),
                 ),

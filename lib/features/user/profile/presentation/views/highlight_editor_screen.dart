@@ -130,9 +130,11 @@ class _HighlightEditorScreenState extends State<HighlightEditorScreen> {
                         child: TextField(
                           controller: _captionController,
                           style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            hintText: 'Add a caption...',
-                            hintStyle: TextStyle(color: Colors.white70),
+                          decoration: InputDecoration(
+                            hintText: Localizations.localeOf(context).languageCode == 'ar'
+                                ? 'أضف وصفاً للقصة...'
+                                : 'Add a caption...',
+                            hintStyle: const TextStyle(color: Colors.white70),
                             border: InputBorder.none,
                           ),
                         ),
@@ -144,6 +146,7 @@ class _HighlightEditorScreenState extends State<HighlightEditorScreen> {
                     BlocBuilder<HighlightCubit, HighlightState>(
                       builder: (context, state) {
                         final isLoading = state is HighlightUploading;
+                        final isAr = Localizations.localeOf(context).languageCode == 'ar';
                         return GestureDetector(
                           onTap: isLoading ? null : _shareToStory,
                           child: Container(
@@ -163,17 +166,17 @@ class _HighlightEditorScreenState extends State<HighlightEditorScreen> {
                                         strokeWidth: 2,
                                       ),
                                     )
-                                  : const Row(
+                                  : Row(
                                       children: [
                                         Text(
-                                          'Share',
-                                          style: TextStyle(
+                                          isAr ? 'نشر' : 'Share',
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        SizedBox(width: 8),
-                                        Icon(Icons.send, color: Colors.white, size: 18),
+                                        const SizedBox(width: 8),
+                                        const Icon(Icons.send, color: Colors.white, size: 18),
                                       ],
                                     ),
                             ),

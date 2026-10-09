@@ -36,8 +36,8 @@ import '../../../catalog/domain/entities/category.dart';
 import '../../../address/presentation/views/widgets/address_selection_bottom_sheet.dart';
 import '../../../address/presentation/manager/address_cubit.dart';
 import '../../../address/domain/services/fulfillment_service.dart';
+import 'widgets/user_notifications_sheet.dart';
 import '../../../../shared/auth/domain/repositories/auth_repository.dart';
-import '../../../../admin/presentation/widgets/admin_notifications_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -263,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
         IconButton(
           icon: const Icon(AppIcons.notification),
           tooltip: S.of(context).notifications,
-          onPressed: () => AdminNotificationsSheet.show(context),
+          onPressed: () => UserNotificationsSheet.show(context),
         ),
 
         const SizedBox(width: 8),

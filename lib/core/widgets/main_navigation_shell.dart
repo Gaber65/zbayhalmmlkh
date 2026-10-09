@@ -65,24 +65,26 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     return Scaffold(
       extendBody: true,
       body: widget.child,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: FloatingActionButton(
-          heroTag: 'whatsapp_support_fab',
-          onPressed: () => WhatsAppHelper.launchSupportChat(),
-          backgroundColor: const Color(0xFF25D366),
-          foregroundColor: Colors.white,
-          elevation: 4,
-          shape: const CircleBorder(),
-          tooltip: 'تواصل عبر واتساب',
-          child: SvgPicture.asset(
-            'assets/images/whatsapp_logo.svg',
-            width: 28,
-            height: 28,
-            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-          ),
-        ),
-      ),
+      floatingActionButton: currentIndex == 0
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: FloatingActionButton(
+                heroTag: 'whatsapp_support_fab',
+                onPressed: () => WhatsAppHelper.launchSupportChat(),
+                backgroundColor: const Color(0xFF25D366),
+                foregroundColor: Colors.white,
+                elevation: 4,
+                shape: const CircleBorder(),
+                tooltip: 'تواصل عبر واتساب',
+                child: SvgPicture.asset(
+                  'assets/images/whatsapp_logo.svg',
+                  width: 28,
+                  height: 28,
+                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                ),
+              ),
+            )
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: !ResponsiveLayout.isMobile(context)
           ? null

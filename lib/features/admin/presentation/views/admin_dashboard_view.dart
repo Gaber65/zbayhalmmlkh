@@ -42,10 +42,54 @@ class AdminDashboardView extends StatelessWidget {
             // ── KPI Statistics Cards ──────────────────────────────────────
             BlocBuilder<AdminDashboardCubit, AdminDashboardState>(
               builder: (context, state) {
+                if (state is AdminDashboardError) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Colors.red),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            state.message,
+                            style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<AdminDashboardCubit>().loadStats();
+                            context.read<AdminOrdersCubit>().loadOrders();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          ),
+                          child: Text(i18n.isArabic ? 'إعادة المحاولة' : 'Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 final stats = state is AdminDashboardLoaded ? state.stats : null;
 
                 return Column(
                   children: [
+                    if (state is AdminDashboardLoading)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.all(Radius.circular(4)),
+                          child: LinearProgressIndicator(minHeight: 3),
+                        ),
+                      ),
                     Row(
                       children: [
                         Expanded(
@@ -448,6 +492,32 @@ class AdminDashboardView extends StatelessWidget {
                         ),
                       );
                     }).toList(),
+                  );
+                }
+
+                if (state is AdminOrdersError) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            state.message,
+                            style: const TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => context.read<AdminOrdersCubit>().loadOrders(),
+                          icon: const Icon(Icons.refresh, size: 14),
+                          label: Text(i18n.isArabic ? 'إعادة المحاولة' : 'Retry'),
+                        ),
+                      ],
+                    ),
                   );
                 }
 

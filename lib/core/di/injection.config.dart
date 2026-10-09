@@ -23,6 +23,8 @@ import '../../features/admin/data/repositories/admin_repository_impl.dart'
     as _i335;
 import '../../features/admin/domain/repositories/admin_repository.dart'
     as _i583;
+import '../../features/admin/presentation/manager/admin_branches_cubit.dart'
+    as _i154;
 import '../../features/admin/presentation/manager/admin_categories_cubit.dart'
     as _i462;
 import '../../features/admin/presentation/manager/admin_dashboard_cubit.dart'
@@ -33,14 +35,14 @@ import '../../features/admin/presentation/manager/admin_options_cubit.dart'
     as _i969;
 import '../../features/admin/presentation/manager/admin_orders_cubit.dart'
     as _i878;
+import '../../features/admin/presentation/manager/admin_payments_cubit.dart'
+    as _i386;
 import '../../features/admin/presentation/manager/admin_products_cubit.dart'
     as _i533;
-import '../../features/admin/presentation/manager/admin_users_cubit.dart'
-    as _i789;
-import '../../features/admin/presentation/manager/admin_payments_cubit.dart'
-    as _i790;
 import '../../features/admin/presentation/manager/admin_settings_cubit.dart'
-    as _i791;
+    as _i918;
+import '../../features/admin/presentation/manager/admin_users_cubit.dart'
+    as _i32;
 import '../../features/shared/auth/data/datasources/auth_local_data_source.dart'
     as _i517;
 import '../../features/shared/auth/data/datasources/auth_remote_data_source.dart'
@@ -143,30 +145,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i973.InternetConnectionChecker>(
       () => registerModule.connectionChecker,
     );
-    gh.lazySingleton<_i461.SearchRemoteDataSource>(
-      () => _i461.SearchRemoteDataSourceImpl(dio: gh<_i361.Dio>()),
-    );
-    gh.lazySingleton<_i389.SearchRepository>(
-      () => _i559.SearchRepositoryImpl(
-        remoteDataSource: gh<_i461.SearchRemoteDataSource>(),
-      ),
-    );
     gh.lazySingleton<_i517.AuthLocalDataSource>(
       () => _i517.AuthLocalDataSourceImpl(
         sharedPreferences: gh<_i460.SharedPreferences>(),
         secureStorage: gh<_i558.FlutterSecureStorage>(),
-      ),
-    );
-    gh.lazySingleton<_i25.SearchProductsUseCase>(
-      () => _i25.SearchProductsUseCase(gh<_i389.SearchRepository>()),
-    );
-    gh.lazySingleton<_i25.GetPopularSearchesUseCase>(
-      () => _i25.GetPopularSearchesUseCase(gh<_i389.SearchRepository>()),
-    );
-    gh.factory<_i118.SearchCubit>(
-      () => _i118.SearchCubit(
-        gh<_i25.SearchProductsUseCase>(),
-        gh<_i25.GetPopularSearchesUseCase>(),
       ),
     );
     gh.lazySingleton<_i361.Dio>(
@@ -194,6 +176,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i865.CartCubit>(
       () => _i865.CartCubit(repository: gh<_i687.CartRepository>()),
+    );
+    gh.lazySingleton<_i461.SearchRemoteDataSource>(
+      () => _i461.SearchRemoteDataSourceImpl(dio: gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i554.AuthRemoteDataSource>(
       () => _i554.AuthRemoteDataSourceImpl(dio: gh<_i361.Dio>()),
@@ -261,6 +246,11 @@ extension GetItInjectableX on _i174.GetIt {
         remoteDataSource: gh<_i517.AdminRemoteDataSource>(),
       ),
     );
+    gh.lazySingleton<_i389.SearchRepository>(
+      () => _i559.SearchRepositoryImpl(
+        remoteDataSource: gh<_i461.SearchRemoteDataSource>(),
+      ),
+    );
     gh.factory<_i881.HomeCubit>(
       () => _i881.HomeCubit(getHomeData: gh<_i1042.GetHomeData>()),
     );
@@ -309,6 +299,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i174.GetCachedUserUseCase>(
       () => _i174.GetCachedUserUseCase(gh<_i61.AuthRepository>()),
     );
+    gh.lazySingleton<_i25.SearchProductsUseCase>(
+      () => _i25.SearchProductsUseCase(gh<_i389.SearchRepository>()),
+    );
+    gh.lazySingleton<_i25.GetPopularSearchesUseCase>(
+      () => _i25.GetPopularSearchesUseCase(gh<_i389.SearchRepository>()),
+    );
+    gh.factory<_i118.SearchCubit>(
+      () => _i118.SearchCubit(
+        gh<_i25.SearchProductsUseCase>(),
+        gh<_i25.GetPopularSearchesUseCase>(),
+      ),
+    );
     gh.factory<_i18.AuthCubit>(
       () => _i18.AuthCubit(
         gh<_i174.LoginUseCase>(),
@@ -318,6 +320,18 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i174.LogoutUseCase>(),
         gh<_i174.GetCachedUserUseCase>(),
       ),
+    );
+    gh.factory<_i154.AdminBranchesCubit>(
+      () => _i154.AdminBranchesCubit(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i386.AdminPaymentsCubit>(
+      () => _i386.AdminPaymentsCubit(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i918.AdminSettingsCubit>(
+      () => _i918.AdminSettingsCubit(gh<_i583.AdminRepository>()),
+    );
+    gh.factory<_i32.AdminUsersCubit>(
+      () => _i32.AdminUsersCubit(gh<_i583.AdminRepository>()),
     );
     gh.factory<_i8.HighlightCubit>(
       () => _i8.HighlightCubit(repository: gh<_i917.HighlightRepository>()),
@@ -339,15 +353,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i533.AdminProductsCubit>(
       () => _i533.AdminProductsCubit(repository: gh<_i583.AdminRepository>()),
-    );
-    gh.factory<_i789.AdminUsersCubit>(
-      () => _i789.AdminUsersCubit(gh<_i583.AdminRepository>()),
-    );
-    gh.factory<_i790.AdminPaymentsCubit>(
-      () => _i790.AdminPaymentsCubit(gh<_i583.AdminRepository>()),
-    );
-    gh.factory<_i791.AdminSettingsCubit>(
-      () => _i791.AdminSettingsCubit(gh<_i583.AdminRepository>()),
     );
     gh.factory<_i858.AddressCubit>(
       () => _i858.AddressCubit(

@@ -18,6 +18,7 @@ class _BroadcastNotificationDialogState extends State<BroadcastNotificationDialo
   final _bodyController = TextEditingController();
   final String _targetTopic = 'topic:all';
   bool _isSending = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -27,15 +28,26 @@ class _BroadcastNotificationDialogState extends State<BroadcastNotificationDialo
   }
 
   Future<void> _submit() async {
+    final i18n = AdminI18n.of(context);
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isSending = true);
+      setState(() {
+        _isSending = true;
+        _errorMessage = null;
+      });
       final success = await widget.onSend(
         _titleController.text.trim(),
         _bodyController.text.trim(),
         _targetTopic,
       );
       if (mounted) {
-        setState(() => _isSending = false);
+        setState(() {
+          _isSending = false;
+          if (!success) {
+            _errorMessage = i18n.isArabic
+                ? 'تعذر إرسال الإشعار، يرجى التحقق من اتصال الخادم والصلاحيات'
+                : 'Failed to send notification. Please check server connection and permissions.';
+          }
+        });
         if (success) {
           Navigator.of(context).pop();
         }
@@ -105,6 +117,28 @@ class _BroadcastNotificationDialogState extends State<BroadcastNotificationDialo
                 key: _formKey,
                 child: Column(
                   children: [
+                    if (_errorMessage != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(color: Colors.red, fontSize: 12.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     TextFormField(
                       controller: _titleController,
                       decoration: InputDecoration(

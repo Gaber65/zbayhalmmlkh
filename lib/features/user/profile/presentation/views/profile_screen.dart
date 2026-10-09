@@ -21,7 +21,6 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
@@ -71,6 +70,7 @@ class ProfileScreen extends StatelessWidget {
             child: BlocBuilder<AppCubit, AppState>(
               builder: (context, appState) {
                 final isDark = appState.themeMode == ThemeMode.dark;
+                final isAr = appState.locale.languageCode == 'ar';
 
                 return Scaffold(
                   backgroundColor: colorScheme.surface,
