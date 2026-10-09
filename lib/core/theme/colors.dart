@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Primary Accent Colors (Soft Vibrant Red & Light Pink Tint)
-  static const Color primary = Color(0xFFE53935);
+  // Primary Accent Colors (Changed to Royal Blue for OTA Patch Test)
+  static const Color primary = Color(0xFF2563EB);
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color primaryContainer = Color(0xFFFDF0F0);
-  static const Color onPrimaryContainer = Color(0xFFC62828);
-  static const Color inversePrimary = Color(0xFFFF8A80);
-  static const Color primaryFixed = Color(0xFFFFEBEE);
-  static const Color primaryFixedDim = Color(0xFFFFCDD2);
-  static const Color onPrimaryFixed = Color(0xFFB71C1C);
-  static const Color onPrimaryFixedVariant = Color(0xFFD32F2F);
+  static const Color primaryContainer = Color(0xFFEFF6FF);
+  static const Color onPrimaryContainer = Color(0xFF1E40AF);
+  static const Color inversePrimary = Color(0xFF60A5FA);
+  static const Color primaryFixed = Color(0xFFDBEAFE);
+  static const Color primaryFixedDim = Color(0xFFBFDBFE);
+  static const Color onPrimaryFixed = Color(0xFF1E3A8A);
+  static const Color onPrimaryFixedVariant = Color(0xFF1D4ED8);
 
   // Secondary Colors (Clean Neutral Charcoal & Slate)
   static const Color secondary = Color(0xFF7A7E89);

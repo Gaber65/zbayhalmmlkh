@@ -4,6 +4,16 @@ on:
   push:
     branches: [ '**' ]
   workflow_dispatch: # يتيح لك تشغيل البناء يدوياً بضغطة زر من صفحة Actions على GitHub
+    inputs:
+      action:
+        description: 'Choose action type'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - release
 
 jobs:
   build-ios:
@@ -35,14 +45,24 @@ jobs:
           pod install
           cd ..
 
-      # 5. بناء تطبيق iOS وتسجيله كـ Release في Shorebird
-      - name: Build and Release iOS Application
+      # 5. بناء تطبيق iOS أو إرسال Patch هوائي عبر Shorebird
+      - name: Build and Release / Patch iOS Application
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         run: |
           if [ -n "$SHOREBIRD_TOKEN" ]; then
-            echo "🚀 SHOREBIRD_TOKEN detected! Building Shorebird Release for iOS..."
-            shorebird release ios --no-codesign --flutter-version=3.41.1
+            ACTION="${{ inputs.action || 'auto' }}"
+            APP_VERSION=$(grep 'version: ' pubspec.yaml | head -n 1 | sed 's/version: //g' | tr -d '\r' | tr -d ' ')
+            echo "📱 Current App Version: $APP_VERSION"
+            echo "⚙️ Action Mode: $ACTION"
+
+            if [ "$ACTION" = "patch" ] || ([ "$ACTION" = "auto" ] && shorebird releases list | grep -q "$APP_VERSION"); then
+              echo "🎯 Release $APP_VERSION exists on Shorebird Cloud! Publishing Over-The-Air (OTA) PATCH..."
+              shorebird patch ios --no-codesign --release-version="$APP_VERSION" --allow-asset-diffs
+            else
+              echo "🚀 Building new Shorebird Release for iOS..."
+              shorebird release ios --no-codesign --flutter-version=3.41.1
+            fi
           else
             echo "⚠️ SHOREBIRD_TOKEN not found in secrets. Building standard unsigned release..."
             flutter build ios --release --no-codesign --config-only
@@ -57,13 +77,13 @@ jobs:
                        clean build
           fi
 
-      # 6. حزم التطبيق في ملف IPA جاهز للتثبيت
+      # 6. حزم التطبيق في ملف IPA في حال إنشاء Release جديد
       - name: Package Payload to IPA
         run: |
           if compgen -G "build/ios/ipa/*.ipa" > /dev/null; then
             echo "📦 Found generated IPA in build/ios/ipa/, copying..."
             cp build/ios/ipa/*.ipa DhabayihLmamlaka.ipa
-          else
+          elif [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ] || [ -d "build/ios/iphoneos/Runner.app" ] || [ -d "build/ios_derived/Build/Products/Release-iphoneos/Runner.app" ]; then
             echo "📦 Packaging Runner.app to Payload/..."
             mkdir -p Payload
             if [ -d "build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app" ]; then
@@ -72,14 +92,15 @@ jobs:
               cp -r build/ios/iphoneos/Runner.app Payload/
             elif [ -d "build/ios_derived/Build/Products/Release-iphoneos/Runner.app" ]; then
               cp -r build/ios_derived/Build/Products/Release-iphoneos/Runner.app Payload/
-            else
-              find build -name "Runner.app" -type d -exec cp -r {} Payload/ \;
             fi
             zip -r DhabayihLmamlaka.ipa Payload
+          else
+            echo "ℹ️ OTA Patch published directly to Shorebird Cloud (no new IPA generated)."
           fi
 
-      # 7. حفظ ملف الـ IPA كـ Artifact على GitHub
+      # 7. حفظ ملف الـ IPA كـ Artifact على GitHub (في حال وجود Release جديد)
       - name: Upload IPA Artifact
+        if: hashFiles('DhabayihLmamlaka.ipa') != ''
         uses: actions/upload-artifact@v4
         with:
           name: dhabayih-lmamlaka-ios
