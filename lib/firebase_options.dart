@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '478058651243',
     projectId: 'shop-system-d5d87',
     storageBucket: 'shop-system-d5d87.firebasestorage.app',
-    iosBundleId: 'com.example.dhabayihLmamlaka',
+    iosBundleId: 'com.zbayhalmmlkh.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '478058651243',
     projectId: 'shop-system-d5d87',
     storageBucket: 'shop-system-d5d87.firebasestorage.app',
-    iosBundleId: 'com.example.dhabayihLmamlaka',
+    iosBundleId: 'com.zbayhalmmlkh.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
