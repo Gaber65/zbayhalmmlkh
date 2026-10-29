@@ -232,9 +232,14 @@ class CuttingOptionsSelector extends StatelessWidget {
       runSpacing: 10,
       children: options.map((opt) {
         final isSelected = selected?.id == opt.id;
-        final label = isAr
+        final baseLabel = isAr
             ? (opt.nameAr ?? opt.name)
             : (opt.nameEn ?? opt.name);
+        final extra = opt.extraPrice ?? 0.0;
+        final feeSuffix = extra > 0
+            ? ' (+${extra.toStringAsFixed(extra % 1 == 0 ? 0 : 1)} ${isAr ? "ر.س" : "SAR"})'
+            : '';
+        final label = '$baseLabel$feeSuffix';
         return GestureDetector(
           onTap: () => onSelect(isSelected ? null : opt),
           child: AnimatedContainer(
@@ -283,9 +288,14 @@ class PackagingOptionsSelector extends StatelessWidget {
     return Column(
       children: options.map((opt) {
         final isSelected = selectedIds.contains(opt.id);
-        final label = isAr
+        final baseLabel = isAr
             ? (opt.nameAr ?? opt.name)
             : (opt.nameEn ?? opt.name);
+        final extra = opt.extraPrice ?? 0.0;
+        final feeSuffix = extra > 0
+            ? ' (+${extra.toStringAsFixed(extra % 1 == 0 ? 0 : 1)} ${isAr ? "ر.س" : "SAR"})'
+            : '';
+        final label = '$baseLabel$feeSuffix';
         return CheckboxListTile(
           value: isSelected,
           onChanged: (_) => onToggle(opt.id),
@@ -356,6 +366,8 @@ class ExcludedPartsSelector extends StatelessWidget {
 
 class SelectionSummary extends StatelessWidget {
   final Product product;
+  final ProductSize? selectedSize;
+  final double? unitBasePrice;
   final ProductOption? selectedCuttingOption;
   final Set<int> selectedPackagingIds;
   final Set<int> selectedExcludedPartIds;
@@ -364,6 +376,8 @@ class SelectionSummary extends StatelessWidget {
   const SelectionSummary({
     super.key,
     required this.product,
+    this.selectedSize,
+    this.unitBasePrice,
     required this.selectedCuttingOption,
     required this.selectedPackagingIds,
     required this.selectedExcludedPartIds,
@@ -377,20 +391,33 @@ class SelectionSummary extends StatelessWidget {
     final s = S.of(context);
     final locale = Localizations.localeOf(context);
     final isAr = locale.languageCode == 'ar';
+    final cur = isAr ? 'ر.س' : 'SAR';
 
     final selectedPkgs = product.packagingOptions.where(
       (p) => selectedPackagingIds.contains(p.id),
-    );
+    ).toList();
     final selectedExcluded = product.excludedParts.where(
       (p) => selectedExcludedPartIds.contains(p.id),
-    );
+    ).toList();
 
     final hasSummary =
+        selectedSize != null ||
         selectedCuttingOption != null ||
         selectedPkgs.isNotEmpty ||
         selectedExcluded.isNotEmpty;
 
     if (!hasSummary) return const SizedBox.shrink();
+
+    final baseUnit = unitBasePrice ?? selectedSize?.price ?? product.displayPrice;
+    final cuttingExtra = selectedCuttingOption?.extraPrice ?? 0.0;
+    final packagingExtra = selectedPkgs.fold<double>(
+      0.0,
+      (sum, p) => sum + (p.extraPrice ?? 0.0),
+    );
+    final unitTotal = baseUnit + cuttingExtra + packagingExtra;
+
+    String fmtFee(double fee) =>
+        fee > 0 ? ' (+${fee.toStringAsFixed(fee % 1 == 0 ? 0 : 1)} $cur)' : '';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -410,15 +437,19 @@ class SelectionSummary extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
+          if (selectedSize != null)
+            SummaryRow(
+              icon: Icons.straighten_rounded,
+              label: isAr ? 'الحجم' : 'Size',
+              value:
+                  '${selectedSize!.name} (${selectedSize!.price.toStringAsFixed(selectedSize!.price % 1 == 0 ? 0 : 1)} $cur)',
+            ),
           if (selectedCuttingOption != null)
             SummaryRow(
               icon: Icons.content_cut_rounded,
               label: s.cutting_options,
-              value: isAr
-                  ? (selectedCuttingOption!.nameAr ??
-                        selectedCuttingOption!.name)
-                  : (selectedCuttingOption!.nameEn ??
-                        selectedCuttingOption!.name),
+              value:
+                  '${isAr ? (selectedCuttingOption!.nameAr ?? selectedCuttingOption!.name) : (selectedCuttingOption!.nameEn ?? selectedCuttingOption!.name)}${fmtFee(cuttingExtra)}',
             ),
           if (selectedPkgs.isNotEmpty)
             SummaryRow(
@@ -426,9 +457,10 @@ class SelectionSummary extends StatelessWidget {
               label: s.packaging_options,
               value: selectedPkgs
                   .map(
-                    (p) => isAr ? (p.nameAr ?? p.name) : (p.nameEn ?? p.name),
+                    (p) =>
+                        '${isAr ? (p.nameAr ?? p.name) : (p.nameEn ?? p.name)}${fmtFee(p.extraPrice ?? 0.0)}',
                   )
-                  .join(', '),
+                  .join('، '),
             ),
           if (selectedExcluded.isNotEmpty)
             SummaryRow(
@@ -438,8 +470,13 @@ class SelectionSummary extends StatelessWidget {
                   .map(
                     (p) => isAr ? (p.nameAr ?? p.name) : (p.nameEn ?? p.name),
                   )
-                  .join(', '),
+                  .join('، '),
             ),
+          SummaryRow(
+            icon: Icons.numbers_rounded,
+            label: s.quantity_label,
+            value: quantity.toInt().toString(),
+          ),
           const Divider(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -451,7 +488,7 @@ class SelectionSummary extends StatelessWidget {
                 ),
               ),
               PriceWidget(
-                price: product.displayPrice * quantity,
+                price: unitTotal * quantity,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: cs.primary,
@@ -662,6 +699,83 @@ class CarcassPriceCards extends StatelessWidget {
   }
 }
 
+/// Carcass Weight / Quantity full-width row matching reference design
+class CarcassWeightCard extends StatelessWidget {
+  final String weight;
+  final String label;
+
+  const CarcassWeightCard({
+    super.key,
+    required this.weight,
+    this.label = 'الكمية',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? cs.surfaceContainerHighest : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.6),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                weight,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: cs.onSurface,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.shopping_bag_outlined,
+              color: cs.primary,
+              size: 22,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Calories full-width row with lightning icon
 class CaloriesBadgeBar extends StatelessWidget {
   final int calories;
@@ -868,19 +982,27 @@ class CarcassSizesSelector extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (size.subTitle != null && size.subTitle!.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          size.subTitle!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: cs.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                      Builder(
+                        builder: (context) {
+                          final subtitleText = (size.subTitle != null && size.subTitle!.isNotEmpty)
+                              ? size.subTitle!
+                              : size.effectiveWeightRange;
+                          if (subtitleText.isEmpty) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              subtitleText,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

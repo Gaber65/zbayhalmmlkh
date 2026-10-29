@@ -80,11 +80,12 @@ Map<String, dynamic> _$HomeDataModelToJson(HomeDataModel instance) =>
 
 UserHighlightModel _$UserHighlightModelFromJson(Map<String, dynamic> json) =>
     UserHighlightModel(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       name: json['name'] as String?,
       email: json['email'] as String?,
       avatarUrl: json['avatar_url'] as String?,
       balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
+      loyaltyPoints: (json['loyalty_points'] as num?)?.toInt() ?? 0,
       activeCart: json['active_cart'] == null
           ? null
           : ActiveCartModel.fromJson(
@@ -99,6 +100,7 @@ Map<String, dynamic> _$UserHighlightModelToJson(UserHighlightModel instance) =>
       'email': instance.email,
       'avatar_url': instance.avatarUrl,
       'balance': instance.balance,
+      'loyalty_points': instance.loyaltyPoints,
       'active_cart': instance.activeCart,
     };
 
@@ -137,32 +139,68 @@ Map<String, dynamic> _$BannerModelToJson(BannerModel instance) =>
 
 HomeProductModel _$HomeProductModelFromJson(Map<String, dynamic> json) =>
     HomeProductModel(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       name: json['name'] as String?,
+      nameAr: json['name_ar'] as String?,
+      nameEn: json['name_en'] as String?,
       description: json['description'] as String?,
+      weight: json['weight'] as String?,
       sellingPrice: (json['selling_price'] as num?)?.toDouble(),
+      price: (json['price'] as num?)?.toDouble(),
       offerPrice: (json['offer_price'] as num?)?.toDouble(),
+      originalPrice: (json['original_price'] as num?)?.toDouble(),
       isOnOffer: json['is_on_offer'] as bool? ?? false,
       isBestSeller: json['is_best_seller'] as bool? ?? false,
+      isFeatured: json['is_featured'] as bool? ?? false,
+      isAvailable: json['is_available'] as bool? ?? true,
+      active: json['active'] as bool? ?? true,
+      isCarcass: json['is_carcass'] as bool? ?? false,
+      hasSizes: json['has_sizes'] as bool? ?? false,
       mainImageUrl: json['main_image_url'] as String?,
+      imageUrl: json['image_url'] as String?,
+      discountTag: json['discount_tag'] as String?,
+      categoryId: json['category_id'],
+      categoryName: json['category_name'] as String?,
+      loyaltyPoints: (json['loyalty_points'] as num?)?.toInt(),
       cuttingOptions: json['cutting_options'] as List<dynamic>?,
       packagingOptions: json['packaging_options'] as List<dynamic>?,
       excludedParts: json['excluded_parts'] as List<dynamic>?,
+      sizes: json['sizes'] as List<dynamic>?,
+      portions: json['portions'] as List<dynamic>?,
+      images: json['images'] as List<dynamic>?,
     );
 
 Map<String, dynamic> _$HomeProductModelToJson(HomeProductModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
+      'name_ar': instance.nameAr,
+      'name_en': instance.nameEn,
       'description': instance.description,
+      'weight': instance.weight,
       'selling_price': instance.sellingPrice,
+      'price': instance.price,
       'offer_price': instance.offerPrice,
+      'original_price': instance.originalPrice,
       'is_on_offer': instance.isOnOffer,
       'is_best_seller': instance.isBestSeller,
+      'is_featured': instance.isFeatured,
+      'is_available': instance.isAvailable,
+      'active': instance.active,
+      'is_carcass': instance.isCarcass,
+      'has_sizes': instance.hasSizes,
       'main_image_url': instance.mainImageUrl,
+      'image_url': instance.imageUrl,
+      'discount_tag': instance.discountTag,
+      'category_id': instance.categoryId,
+      'category_name': instance.categoryName,
+      'loyalty_points': instance.loyaltyPoints,
       'cutting_options': instance.cuttingOptions,
       'packaging_options': instance.packagingOptions,
       'excluded_parts': instance.excludedParts,
+      'sizes': instance.sizes,
+      'portions': instance.portions,
+      'images': instance.images,
     };
 
 JabinHighlightModel _$JabinHighlightModelFromJson(Map<String, dynamic> json) =>

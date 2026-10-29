@@ -2,22 +2,74 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
+import 'package:dhabayih_lmamlaka/core/di/injection.dart';
 import 'package:dhabayih_lmamlaka/generated/l10n.dart';
 import '../../../domain/entities/address_entity.dart';
 import '../../manager/address_cubit.dart';
 import '../../manager/address_state.dart';
 import '../../../domain/services/fulfillment_service.dart';
+import 'package:dhabayih_lmamlaka/features/user/orders/domain/entities/branch_entity.dart';
+import 'package:dhabayih_lmamlaka/features/user/orders/domain/repositories/order_repository.dart';
 
 /// Modal bottom sheet for switching between Home Delivery (saved addresses)
 /// and Store Branch Pickup.
 class AddressSelectionBottomSheet extends StatefulWidget {
   final String? initialLocation;
+  final String? initialMode;
 
-  const AddressSelectionBottomSheet({super.key, this.initialLocation});
+  const AddressSelectionBottomSheet({
+    super.key,
+    this.initialLocation,
+    this.initialMode,
+  });
+
+  static const List<BranchEntity> defaultBranches = [
+    BranchEntity(
+      id: 1,
+      name: 'فرع الرياض - العليا',
+      city: 'الرياض',
+      address: 'طريق الملك فهد، حي العليا',
+      openingHours: '08:00 ص - 11:00 م',
+      phone: '+966501234567',
+    ),
+    BranchEntity(
+      id: 2,
+      name: 'فرع الرياض - النرجس',
+      city: 'الرياض',
+      address: 'طريق أبي بكر الصديق، حي النرجس',
+      openingHours: '08:00 ص - 11:30 م',
+      phone: '+966509876543',
+    ),
+    BranchEntity(
+      id: 3,
+      name: 'فرع جدة - الروضة',
+      city: 'جدة',
+      address: 'شارع الكيال، حي الروضة',
+      openingHours: '09:00 ص - 11:00 م',
+      phone: '+966551239876',
+    ),
+    BranchEntity(
+      id: 4,
+      name: 'فرع الدمام - الشاطئ',
+      city: 'الدمام',
+      address: 'طريق الأمير محمد بن فهد، حي الشاطئ',
+      openingHours: '08:30 ص - 11:00 م',
+      phone: '+966531234567',
+    ),
+    BranchEntity(
+      id: 5,
+      name: 'فرع المدينة المنورة - سلطانة',
+      city: 'المدينة المنورة',
+      address: 'شارع سلطانة، مقابل النور مول',
+      openingHours: '09:00 ص - 11:30 م',
+      phone: '+966541234567',
+    ),
+  ];
 
   static Future<Map<String, dynamic>?> show(
     BuildContext context, {
     String? initialLocation,
+    String? initialMode,
     AddressCubit? cubit,
   }) {
     return showModalBottomSheet<Map<String, dynamic>>(
@@ -27,6 +79,7 @@ class AddressSelectionBottomSheet extends StatefulWidget {
       builder: (ctx) {
         final content = AddressSelectionBottomSheet(
           initialLocation: initialLocation,
+          initialMode: initialMode,
         );
         return cubit != null
             ? BlocProvider.value(value: cubit, child: content)
@@ -44,15 +97,39 @@ class _AddressSelectionBottomSheetState
     extends State<AddressSelectionBottomSheet> {
   int _modeIndex = 0; // 0 = Home Delivery, 1 = Store Pickup
   int? _selectedAddressId;
+  int? _selectedBranchId;
+  List<BranchEntity> _branches = AddressSelectionBottomSheet.defaultBranches;
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialMode == 'pickup') {
+      _modeIndex = 1;
+    }
     // Load addresses if cubit is available
     final cubit = context.read<AddressCubit?>();
     if (cubit != null && cubit.state is! AddressLoaded) {
       cubit.loadAddresses();
     }
+    _loadBranches();
+  }
+
+  Future<void> _loadBranches() async {
+    try {
+      final repo = getIt<OrderRepository>();
+      final result = await repo.getBranches();
+      result.fold(
+        (_) {},
+        (branches) {
+          if (branches.isNotEmpty && mounted) {
+            setState(() {
+              _branches = branches;
+              _selectedBranchId ??= branches.first.id;
+            });
+          }
+        },
+      );
+    } catch (_) {}
   }
 
   @override
@@ -442,55 +519,150 @@ class _AddressSelectionBottomSheetState
   // ── Store Pickup Tab ────────────────────────────────────────────────────────
 
   Widget _buildPickupTab(ColorScheme cs, ThemeData theme, S s) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cs.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: cs.primary.withValues(alpha: 0.3),
-          width: 1.5,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'اختر الفرع للاستلام الذاتي',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: cs.onSurfaceVariant,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: cs.primary,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.storefront_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  s.addr_pickup,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+        const SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _branches.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, index) {
+            final branch = _branches[index];
+            final isSelected = (_selectedBranchId == null && index == 0) ||
+                _selectedBranchId == branch.id;
+
+            return InkWell(
+              onTap: () {
+                setState(() => _selectedBranchId = branch.id);
+              },
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? cs.primary.withValues(alpha: 0.06)
+                      : cs.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected
+                        ? cs.primary
+                        : cs.outlineVariant.withValues(alpha: 0.6),
+                    width: isSelected ? 1.8 : 0.8,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'استلام الطلب مباشرة من الفرع دون أي رسوم توصيل إضافية',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    height: 1.3,
-                  ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected
+                              ? cs.primary
+                              : cs.onSurfaceVariant.withValues(alpha: 0.4),
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? Center(
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: cs.primary,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                branch.name,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (branch.city.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: cs.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    branch.city,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            branch.address,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (branch.openingHours != null &&
+                              branch.openingHours!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time_rounded,
+                                  size: 12,
+                                  color: cs.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  branch.openingHours!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          const Icon(Icons.check_circle_rounded, color: Colors.green, size: 24),
-        ],
-      ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -566,15 +738,22 @@ class _AddressSelectionBottomSheetState
       }
     } else {
       // Store Pickup mode
-      final displayText = S.of(context).addr_pickup;
+      final branch = _branches.firstWhere(
+        (b) => b.id == _selectedBranchId,
+        orElse: () => _branches.first,
+      );
 
       await FulfillmentService.saveStorePickup(
-        branchName: displayText,
-        branchAddress: '',
+        branchName: branch.name,
+        branchAddress: branch.address,
       );
 
       if (mounted) {
-        Navigator.pop(context, {'mode': 'pickup', 'displayText': displayText});
+        Navigator.pop(context, {
+          'mode': 'pickup',
+          'displayText': branch.name,
+          'branch': branch,
+        });
       }
     }
   }

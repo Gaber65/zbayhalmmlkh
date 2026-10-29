@@ -197,10 +197,18 @@ class FavoritesScreen extends StatelessWidget {
                             context.read<FavoritesCubit>().removeFavorite(fav.id);
                           },
                           onAddToCart: () {
-                            context.push(Routes.productDetails, extra: prod);
+                            if (prod.isCarcass || prod.effectivePortions.isNotEmpty) {
+                              context.push(Routes.carcassPortions, extra: prod);
+                            } else {
+                              context.push(Routes.productDetails, extra: prod);
+                            }
                           },
                           onTap: () {
-                            context.push(Routes.productDetails, extra: prod);
+                            if (prod.isCarcass || prod.effectivePortions.isNotEmpty) {
+                              context.push(Routes.carcassPortions, extra: prod);
+                            } else {
+                              context.push(Routes.productDetails, extra: prod);
+                            }
                           },
                         );
                       },

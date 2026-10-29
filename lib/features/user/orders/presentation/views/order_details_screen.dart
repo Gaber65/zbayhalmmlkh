@@ -282,6 +282,19 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                       color: cs.onSurfaceVariant,
                                     ),
                                   ),
+                                  if ((order.slaughterDate != null &&
+                                          order.slaughterDate!.isNotEmpty) ||
+                                      (order.slaughterTime != null &&
+                                          order.slaughterTime!.isNotEmpty)) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'موعد الذبح والتجهيز: ${[order.slaughterDate, order.slaughterTime].whereType<String>().where((e) => e.isNotEmpty).join(" • ")}',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: cs.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                               Container(
@@ -568,28 +581,45 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
               color: cs.onSurfaceVariant,
             ),
           ),
-          if (line.cuttingOption != null ||
+          if ((line.sizeName != null && line.sizeName!.isNotEmpty) ||
+              line.cuttingOption != null ||
               line.packaging != null ||
+              line.packagingOptions.isNotEmpty ||
               line.excludedParts.isNotEmpty) ...[
             const Divider(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 4,
               children: [
+                if (line.sizeName != null && line.sizeName!.isNotEmpty)
+                  _buildOptionBadge(
+                    Icons.straighten_rounded,
+                    'الحجم: ${line.sizeName!}',
+                    Colors.teal,
+                    cs,
+                  ),
                 if (line.cuttingOption != null)
                   _buildOptionBadge(
                     Icons.content_cut_rounded,
-                    line.cuttingOption!.name,
-                    Colors.amber,
+                    '${line.cuttingOption!.name}${line.cuttingPrice > 0 ? " (+${line.cuttingPrice.toStringAsFixed(0)} ${s.sar})" : ""}',
+                    Colors.amber.shade800,
                     cs,
                   ),
                 if (line.packaging != null)
                   _buildOptionBadge(
                     Icons.inventory_2_rounded,
-                    line.packaging!.name,
+                    '${line.packaging!.name}${line.packagingPrice > 0 ? " (+${line.packagingPrice.toStringAsFixed(0)} ${s.sar})" : ""}',
                     Colors.green,
                     cs,
-                  ),
+                  )
+                else
+                  for (var pkg in line.packagingOptions)
+                    _buildOptionBadge(
+                      Icons.inventory_2_rounded,
+                      '${pkg.name}${(pkg.extraPrice ?? 0) > 0 ? " (+${pkg.extraPrice!.toStringAsFixed(0)} ${s.sar})" : ""}',
+                      Colors.green,
+                      cs,
+                    ),
                 for (var part in line.excludedParts)
                   _buildOptionBadge(
                     Icons.remove_circle_outline_rounded,

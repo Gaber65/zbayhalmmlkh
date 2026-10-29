@@ -507,6 +507,39 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
             ),
           ),
 
+          // Slaughter Schedule
+          if ((order.slaughterDate != null && order.slaughterDate!.isNotEmpty) ||
+              (order.slaughterTime != null && order.slaughterTime!.isNotEmpty)) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_month_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${i18n.isArabic ? "موعد الذبح والتجهيز:" : "Slaughter Schedule:"} ${[order.slaughterDate, order.slaughterTime].whereType<String>().where((e) => e.isNotEmpty).join(" • ")}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // Notes
           if (order.notes != null && order.notes!.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -581,16 +614,38 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
                     style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : Colors.black54),
                   ),
 
-                  // Cutting, Packaging & Excluded Parts Badges
+                  // Size, Cutting, Packaging & Excluded Parts Badges
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
                     children: [
+                      if (line.sizeName != null && line.sizeName!.isNotEmpty)
+                        _buildOptionBadge(
+                          '${i18n.isArabic ? "الحجم" : "Size"}: ${line.sizeName!}',
+                          Colors.teal,
+                          isDark,
+                        ),
                       if (line.cuttingOption != null)
-                        _buildOptionBadge(line.cuttingOption!.name, Colors.blue, isDark),
+                        _buildOptionBadge(
+                          '${line.cuttingOption!.name}${line.cuttingPrice > 0 ? " (+${line.cuttingPrice.toStringAsFixed(0)} ${i18n.sar})" : ""}',
+                          Colors.blue,
+                          isDark,
+                        ),
                       if (line.packaging != null)
-                        _buildOptionBadge(line.packaging!.name, Colors.purple, isDark),
+                        _buildOptionBadge(
+                          '${line.packaging!.name}${line.packagingPrice > 0 ? " (+${line.packagingPrice.toStringAsFixed(0)} ${i18n.sar})" : ""}',
+                          Colors.purple,
+                          isDark,
+                        )
+                      else
+                        ...line.packagingOptions.map(
+                          (pkg) => _buildOptionBadge(
+                            '${pkg.name}${(pkg.extraPrice ?? 0) > 0 ? " (+${pkg.extraPrice!.toStringAsFixed(0)} ${i18n.sar})" : ""}',
+                            Colors.purple,
+                            isDark,
+                          ),
+                        ),
                       ...line.excludedParts.map(
                         (p) => _buildOptionBadge(p.name, Colors.amber.shade800, isDark),
                       ),
@@ -686,8 +741,6 @@ class _AdminOrderDetailsScreenState extends State<AdminOrderDetailsScreen> {
           ],
 
           _buildSummaryRow(i18n.isArabic ? 'المجموع الفرعي' : 'Subtotal', '${order.subtotal.toStringAsFixed(2)} ${i18n.sar}', isDark),
-          if (order.deliveryFee > 0)
-            _buildSummaryRow(i18n.isArabic ? 'رسوم التوصيل' : 'Delivery Fee', '${order.deliveryFee.toStringAsFixed(2)} ${i18n.sar}', isDark),
           if (order.couponCode != null && order.discountAmount > 0)
             _buildSummaryRow('${i18n.isArabic ? "خصم كوبون" : "Coupon"} (${order.couponCode})', '-${order.discountAmount.toStringAsFixed(2)} ${i18n.sar}', isDark, isGreen: true),
           if (order.pointsRedeemed > 0 && order.loyaltyDiscountAmount > 0)

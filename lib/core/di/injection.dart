@@ -23,7 +23,6 @@ import '../../features/admin/presentation/manager/admin_branches_cubit.dart';
 import 'injection.config.dart';
 import '../payment/payment_service.dart';
 import '../payment/moyasar_payment_gateway.dart';
-import '../payment/myfatoorah_payment_gateway.dart';
 
 final getIt = GetIt.instance;
 
@@ -36,7 +35,6 @@ Future<void> configureDependencies() async {
   await getIt.init();
   final paymentService = PaymentService();
   paymentService.registerGateway(MoyasarPaymentGateway());
-  paymentService.registerGateway(MyFatoorahPaymentGateway());
   getIt.registerLazySingleton<PaymentService>(() => paymentService);
 
   // ── Register Admin dependencies ──────────────────────────────────────────

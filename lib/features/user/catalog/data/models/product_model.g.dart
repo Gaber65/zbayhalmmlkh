@@ -47,6 +47,8 @@ ProductModel _$ProductModelFromJson(Map<String, dynamic> json) => ProductModel(
   images: json['images'] as List<dynamic>?,
   hasSizes: json['has_sizes'] as bool? ?? false,
   sizes: json['sizes'] as List<dynamic>?,
+  isCarcass: json['is_carcass'] as bool? ?? false,
+  portions: json['portions'] as List<dynamic>?,
   calories: (json['calories'] as num?)?.toInt(),
 );
 
@@ -92,5 +94,7 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'images': instance.images,
       'has_sizes': instance.hasSizes,
       'sizes': instance.sizes,
+      'is_carcass': instance.isCarcass,
+      'portions': instance.portions,
       'calories': instance.calories,
     };

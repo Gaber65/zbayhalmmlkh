@@ -18,10 +18,7 @@ class FulfillmentService {
     await prefs.setString(_keyMode, 'pickup');
     await prefs.setString(_keyBranchName, branchName);
     await prefs.setString(_keyBranchAddress, branchAddress);
-    await prefs.setString(
-      _keyLocationDisplay,
-      'الاستلام من الفرع',
-    );
+    await prefs.setString(_keyLocationDisplay, 'الاستلام من الفرع');
   }
 
   /// Save home delivery selection
@@ -53,10 +50,7 @@ class FulfillmentService {
     final name = prefs.getString(_keyBranchName);
     final address = prefs.getString(_keyBranchAddress);
     if (name == null || name.isEmpty) return null;
-    return {
-      'name': name,
-      'address': address ?? '',
-    };
+    return {'name': name, 'address': address ?? ''};
   }
 
   /// Get persistent display location text for home header & cart

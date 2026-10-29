@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dhabayih_lmamlaka/generated/l10n.dart';
+
 import '../routes/routes.dart';
-import '../theme/app_icons.dart';
 import '../utils/whatsapp_helper.dart';
+import '../../features/user/cart/presentation/manager/cart_cubit.dart';
+import '../../features/user/cart/presentation/manager/cart_state.dart';
+import '../../features/user/home/presentation/manager/home_cubit.dart';
+import '../../features/user/home/presentation/manager/home_state.dart';
+import '../../features/user/home/presentation/views/widgets/kingdom/kingdom_design.dart';
 import 'responsive_layout.dart';
 
 class MainNavigationShell extends StatefulWidget {
@@ -40,12 +45,29 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     }
   }
 
+  int _resolveCartBadgeCount(BuildContext context) {
+    try {
+      final cartState = context.watch<CartCubit>().state;
+      if (cartState is CartLoaded) {
+        return cartState.cart.itemCount;
+      }
+      if (cartState is CartItemAdded) {
+        return cartState.cart.itemCount;
+      }
+    } catch (_) {}
+
+    try {
+      final homeState = context.watch<HomeCubit>().state;
+      if (homeState is HomeLoaded) {
+        return homeState.homeData.userHighlight?.activeCart?.lineCount ?? 0;
+      }
+    } catch (_) {}
+
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    // Calculate current selection index from GoRouter path
     final String location = GoRouterState.of(context).uri.path;
     int currentIndex = 0;
     if (location.startsWith(Routes.home)) {
@@ -60,149 +82,184 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       currentIndex = 4;
     }
 
-    const int totalItems = 5;
+    final cartBadgeCount = _resolveCartBadgeCount(context);
+    final p = KPalette.of(context);
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
+      backgroundColor: p.paper,
       body: widget.child,
-      floatingActionButton: currentIndex == 0
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: FloatingActionButton(
-                heroTag: 'whatsapp_support_fab',
-                onPressed: () => WhatsAppHelper.launchSupportChat(),
-                backgroundColor: const Color(0xFF25D366),
-                foregroundColor: Colors.white,
-                elevation: 4,
-                shape: const CircleBorder(),
-                tooltip: 'تواصل عبر واتساب',
-                child: SvgPicture.asset(
-                  'assets/images/whatsapp_logo.svg',
-                  width: 28,
-                  height: 28,
-                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                ),
-              ),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: !ResponsiveLayout.isMobile(context)
-          ? null
-          : SafeArea(
-              top: false,
-              bottom: true,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 12, top: 4),
-          child: Container(
-            height: 64,
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 24,
-                  spreadRadius: 0,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(totalItems, (index) {
-                final isSelected = currentIndex == index;
-
-                late final IconData icon;
-                late final IconData selectedIcon;
-                late final String label;
-
-                switch (index) {
-                  case 0:
-                    icon = AppIcons.homeOutline;
-                    selectedIcon = AppIcons.homeBold;
-                    label = S.of(context).home;
-                    break;
-                  case 1:
-                    icon = AppIcons.categoryOutline;
-                    selectedIcon = AppIcons.categoryBold;
-                    label = S.of(context).categories_title;
-                    break;
-                  case 2:
-                    icon = AppIcons.bagOutline;
-                    selectedIcon = AppIcons.bagBold;
-                    label = S.of(context).my_cart;
-                    break;
-                  case 3:
-                    icon = AppIcons.documentOutline;
-                    selectedIcon = AppIcons.documentBold;
-                    label = S.of(context).orders_title;
-                    break;
-                  case 4:
-                    icon = AppIcons.profileOutline;
-                    selectedIcon = AppIcons.profileBold;
-                    label = S.of(context).profile;
-                    break;
-                }
-
-                return GestureDetector(
-                  onTap: () => _onItemTapped(index),
-                  behavior: HitTestBehavior.opaque,
-                  child: Semantics(
-                    button: true,
-                    selected: isSelected,
-                    label: label,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeOutCubic,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isSelected ? 16 : 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? colorScheme.primary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: colorScheme.primary.withValues(alpha: 0.35),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isSelected ? selectedIcon : icon,
-                            color: isSelected ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
-                            size: 22,
-                          ),
-                          if (isSelected) ...[
-                            const SizedBox(width: 8),
-                            Text(
-                              label,
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: colorScheme.onPrimary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'kingdom_whatsapp_fab',
+        onPressed: () {
+          WhatsAppHelper.launchSupportChat();
+        },
+        backgroundColor: const Color(0xFF25D366),
+        elevation: 4,
+        shape: const CircleBorder(),
+        tooltip: kTr(context, 'تواصل عبر واتساب', 'WhatsApp Support'),
+        child: SvgPicture.asset(
+          'assets/images/whatsapp_logo.svg',
+          width: 28,
+          height: 28,
+          colorFilter: const ColorFilter.mode(
+            Colors.white,
+            BlendMode.srcIn,
           ),
         ),
+      ),
+      bottomNavigationBar: !ResponsiveLayout.isMobile(context)
+          ? null
+          : KingdomBottomNavigationBar(
+              currentIndex: currentIndex,
+              cartBadgeCount: cartBadgeCount,
+              onItemTapped: _onItemTapped,
+            ),
+    );
+  }
+}
+
+/// Bottom navigation bar matching `<nav class="bottom-nav">` in `design_reference/index.html`.
+class KingdomBottomNavigationBar extends StatelessWidget {
+  final int currentIndex;
+  final int cartBadgeCount;
+  final ValueChanged<int> onItemTapped;
+
+  const KingdomBottomNavigationBar({
+    super.key,
+    required this.currentIndex,
+    this.cartBadgeCount = 0,
+    required this.onItemTapped,
+  });
+
+  static const List<({KIcon icon, String labelAr, String labelEn})> _items = [
+    (icon: KIcon.home, labelAr: 'الرئيسية', labelEn: 'Home'),
+    (icon: KIcon.grid, labelAr: 'الأقسام', labelEn: 'Categories'),
+    (icon: KIcon.bag, labelAr: 'السلة', labelEn: 'Cart'),
+    (icon: KIcon.orders, labelAr: 'طلباتي', labelEn: 'Orders'),
+    (icon: KIcon.user, labelAr: 'حسابي', labelEn: 'Account'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final p = KPalette.of(context);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final bottomPad = bottomInset > 9 ? bottomInset : 9.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: p.navBg,
+        border: Border(top: BorderSide(color: p.line, width: 1)),
+      ),
+      padding: EdgeInsets.fromLTRB(10, 7, 10, bottomPad),
+      child: Row(
+        children: List.generate(_items.length, (index) {
+          final item = _items[index];
+          final label = kTr(context, item.labelAr, item.labelEn);
+          final isSelected = currentIndex == index;
+          final badge = index == 2 ? cartBadgeCount : 0;
+
+          return Expanded(
+            child: KTap(
+              onTap: () => onItemTapped(index),
+              radius: BorderRadius.circular(10),
+              selected: isSelected,
+              semanticLabel: label,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 3),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 46,
+                        height: 25,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 46,
+                              height: 25,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? p.navActivePill
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              alignment: Alignment.center,
+                              child: KSvgIcon(
+                                item.icon,
+                                size: 22,
+                                color: isSelected
+                                    ? p.red
+                                    : (p.isDark
+                                        ? p.inkMuted
+                                        : const Color(0xFF85897F)),
+                              ),
+                            ),
+                            if (badge > 0)
+                              PositionedDirectional(
+                                top: -3,
+                                end: 4,
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                    minWidth: 15,
+                                    minHeight: 15,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: p.red,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: p.surface,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    badge > 99 ? '99+' : '$badge',
+                                    style: kText(
+                                      9,
+                                      weight: FontWeight.w500,
+                                      color: Colors.white,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: kText(
+                          10,
+                          weight:
+                              isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected
+                              ? p.red
+                              : (p.isDark
+                                  ? p.inkMuted
+                                  : const Color(0xFF85897F)),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

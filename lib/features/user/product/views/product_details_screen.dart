@@ -24,13 +24,26 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   int? get _productId {
     final p = widget.product;
     if (p is int) return p;
-    if (p is Map) return p['id'] as int?;
+    if (p is Map) {
+      if (p['product'] is Product) return (p['product'] as Product).id;
+      return p['id'] as int?;
+    }
     if (p is Product) return p.id;
     return null;
   }
 
   Product? _inlineProduct() {
     if (widget.product is Product) return widget.product as Product;
+    if (widget.product is Map && widget.product['product'] is Product) {
+      return widget.product['product'] as Product;
+    }
+    return null;
+  }
+
+  String? get _initialPortion {
+    if (widget.product is Map) {
+      return widget.product['portion'] as String?;
+    }
     return null;
   }
 
@@ -96,6 +109,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       galleryImages: loaded.galleryImages.isNotEmpty
                           ? loaded.galleryImages
                           : preloaded.galleryImages,
+                      isCarcass: loaded.isCarcass,
+                      portions: loaded.portions,
                     )
                   : loaded;
               return _buildWithProduct(effectiveProduct);
@@ -208,8 +223,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           }
         },
         child: ResponsiveLayout(
-          mobile: ProductMobileView(product: product),
-          desktop: ProductWebView(product: product),
+          mobile: ProductMobileView(
+            product: product,
+            initialPortion: _initialPortion,
+          ),
+          desktop: ProductWebView(
+            product: product,
+            initialPortion: _initialPortion,
+          ),
         ),
       ),
     );

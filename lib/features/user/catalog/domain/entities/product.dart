@@ -34,6 +34,10 @@ class ProductSize extends Equatable {
   final int id;
   final String name;
   final String? subTitle;
+  final String? portionType; // 'full', 'half', 'quarter'
+  final String? weightRange;
+  final double? minWeight;
+  final double? maxWeight;
   final double price;
   final int calories;
   final int loyaltyPoints;
@@ -45,6 +49,10 @@ class ProductSize extends Equatable {
     required this.id,
     required this.name,
     this.subTitle,
+    this.portionType,
+    this.weightRange,
+    this.minWeight,
+    this.maxWeight,
     required this.price,
     this.calories = 0,
     this.loyaltyPoints = 0,
@@ -53,11 +61,33 @@ class ProductSize extends Equatable {
     this.sequence = 0,
   });
 
+  /// Intelligently derive the displayed weight range (e.g. "11-12 كجم")
+  String get effectiveWeightRange {
+    if (weightRange != null && weightRange!.isNotEmpty) {
+      return weightRange!;
+    }
+    if (subTitle != null && subTitle!.contains('كجم')) {
+      return subTitle!;
+    }
+    final lowerName = name.toLowerCase();
+    if (lowerName.contains('فاخر')) return '16 - 17 كجم تقريباً';
+    if (lowerName.contains('وسط') && lowerName.contains('هرفي')) return '13 - 14 كجم تقريباً';
+    if (lowerName.contains('صغير') || lowerName.contains('هرفي')) return '11 - 12 كجم تقريباً';
+    if (lowerName.contains('جذع وسط')) return '18 - 20 كجم تقريباً';
+    if (lowerName.contains('جذع') || lowerName.contains('جبر') || lowerName.contains('ناهي')) return '21 - 23 كجم تقريباً';
+    if (lowerName.contains('كبير') || lowerName.contains('ثني')) return '24 - 27 كجم تقريباً';
+    return '11 - 12 كجم تقريباً';
+  }
+
   factory ProductSize.fromMap(Map<String, dynamic> map) {
     return ProductSize(
       id: (map['id'] as num?)?.toInt() ?? 0,
       name: map['name'] as String? ?? '',
       subTitle: map['sub_title'] as String? ?? map['subTitle'] as String?,
+      portionType: map['portion_type'] as String? ?? map['portionType'] as String?,
+      weightRange: map['weight_range'] as String? ?? map['weightRange'] as String? ?? (map['weight']?.toString()),
+      minWeight: (map['min_weight'] as num?)?.toDouble() ?? (map['minWeight'] as num?)?.toDouble(),
+      maxWeight: (map['max_weight'] as num?)?.toDouble() ?? (map['maxWeight'] as num?)?.toDouble(),
       price: (map['price'] as num?)?.toDouble() ?? 0.0,
       calories: (map['calories'] as num?)?.toInt() ?? 0,
       loyaltyPoints: (map['loyalty_points'] as num?)?.toInt() ?? (map['loyaltyPoints'] as num?)?.toInt() ?? 0,
@@ -71,6 +101,10 @@ class ProductSize extends Equatable {
     'id': id,
     'name': name,
     'sub_title': subTitle,
+    'portion_type': portionType,
+    'weight_range': weightRange,
+    'min_weight': minWeight,
+    'max_weight': maxWeight,
     'price': price,
     'calories': calories,
     'loyalty_points': loyaltyPoints,
@@ -80,7 +114,53 @@ class ProductSize extends Equatable {
   };
 
   @override
-  List<Object?> get props => [id, name, subTitle, price, calories, loyaltyPoints, pointsPrice, isDefault, sequence];
+  List<Object?> get props => [id, name, subTitle, portionType, weightRange, minWeight, maxWeight, price, calories, loyaltyPoints, pointsPrice, isDefault, sequence];
+}
+
+/// Represents an API-driven carcass portion breakdown (كامل, نصف, ربع)
+class ProductPortion extends Equatable {
+  final String type; // 'full', 'half', 'quarter'
+  final String name; // 'كامل', 'نصف', 'ربع'
+  final String title;
+  final String subtitle;
+  final String imageUrl;
+  final double startingPrice;
+  final int sizeCount;
+
+  const ProductPortion({
+    required this.type,
+    required this.name,
+    required this.title,
+    required this.subtitle,
+    required this.imageUrl,
+    required this.startingPrice,
+    this.sizeCount = 0,
+  });
+
+  factory ProductPortion.fromMap(Map<String, dynamic> map) {
+    return ProductPortion(
+      type: map['type'] as String? ?? 'full',
+      name: map['name'] as String? ?? 'كامل',
+      title: map['title'] as String? ?? '',
+      subtitle: map['subtitle'] as String? ?? '',
+      imageUrl: map['image_url'] as String? ?? '',
+      startingPrice: (map['starting_price'] as num?)?.toDouble() ?? 0.0,
+      sizeCount: (map['size_count'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'type': type,
+    'name': name,
+    'title': title,
+    'subtitle': subtitle,
+    'image_url': imageUrl,
+    'starting_price': startingPrice,
+    'size_count': sizeCount,
+  };
+
+  @override
+  List<Object?> get props => [type, name, title, subtitle, imageUrl, startingPrice, sizeCount];
 }
 
 class Product extends Equatable {
@@ -120,6 +200,8 @@ class Product extends Equatable {
   final int calories;
   final bool hasSizes;
   final List<ProductSize> sizes;
+  final bool isCarcass;
+  final List<ProductPortion> portions;
   final List<ProductOption> cuttingOptions;
   final List<ProductOption> packagingOptions;
   final List<ProductOption> excludedParts;
@@ -152,6 +234,8 @@ class Product extends Equatable {
     this.isBestSeller = false,
     this.isAvailable = true,
     this.active = true,
+    this.isCarcass = false,
+    this.portions = const [],
     this.stockQuantity,
     this.minimumStock,
     this.weightKg,
@@ -167,6 +251,69 @@ class Product extends Equatable {
     this.excludedParts = const [],
     this.galleryImages = const [],
   });
+
+  /// Real API-driven carcass portions synchronized strictly with assigned sizes
+  List<ProductPortion> get effectivePortions {
+    if (portions.isNotEmpty) {
+      final filtered = portions
+          .where(
+            (p) =>
+                p.sizeCount > 0 ||
+                sizes.any((s) => (s.portionType ?? 'full') == p.type),
+          )
+          .toList();
+      if (filtered.isNotEmpty) return filtered;
+    }
+    if (!hasSizes || sizes.isEmpty) return const [];
+
+    final fullSizes =
+        sizes.where((s) => (s.portionType ?? 'full') == 'full').toList();
+    final halfSizes = sizes.where((s) => s.portionType == 'half').toList();
+    final quarterSizes =
+        sizes.where((s) => s.portionType == 'quarter').toList();
+
+    final result = <ProductPortion>[];
+    if (fullSizes.isNotEmpty) {
+      result.add(
+        ProductPortion(
+          type: 'full',
+          name: 'كامل',
+          title: '$title كامل',
+          subtitle: 'ذبيحة كاملة مجهزة بالكامل',
+          imageUrl: imageUrl,
+          startingPrice: fullSizes.first.price,
+          sizeCount: fullSizes.length,
+        ),
+      );
+    }
+    if (halfSizes.isNotEmpty) {
+      result.add(
+        ProductPortion(
+          type: 'half',
+          name: 'نصف',
+          title: 'نصف $title',
+          subtitle: 'نصف ذبيحة طازج مقسوم بالطول',
+          imageUrl: imageUrl,
+          startingPrice: halfSizes.first.price,
+          sizeCount: halfSizes.length,
+        ),
+      );
+    }
+    if (quarterSizes.isNotEmpty) {
+      result.add(
+        ProductPortion(
+          type: 'quarter',
+          name: 'ربع',
+          title: 'ربع $title',
+          subtitle: 'ربع متكامل (كتف أو فخذ مع ضلوع)',
+          imageUrl: imageUrl,
+          startingPrice: quarterSizes.first.price,
+          sizeCount: quarterSizes.length,
+        ),
+      );
+    }
+    return result;
+  }
 
   /// The effective price to display (offer price if on offer, else regular price)
   double get displayPrice => (isOnOffer && offerPrice != null && offerPrice! > 0)
@@ -239,6 +386,9 @@ class Product extends Equatable {
         categoryId,
         categoryName,
         loyaltyPoints,
+        sizes,
+        isCarcass,
+        portions,
         cuttingOptions,
         packagingOptions,
         excludedParts,

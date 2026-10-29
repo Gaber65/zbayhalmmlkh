@@ -57,6 +57,12 @@ class ProductModel extends Equatable {
   @JsonKey(name: 'is_available', defaultValue: true)
   final bool isAvailable;
 
+  @JsonKey(name: 'is_carcass', defaultValue: false)
+  final bool isCarcass;
+
+  @JsonKey(name: 'portions')
+  final List<dynamic>? portions;
+
   @JsonKey(name: 'stock_quantity')
   final double? stockQuantity;
 
@@ -170,6 +176,8 @@ class ProductModel extends Equatable {
     this.images,
     this.hasSizes = false,
     this.sizes,
+    this.isCarcass = false,
+    this.portions,
     this.calories,
   });
 
@@ -279,6 +287,17 @@ class ProductModel extends Equatable {
     }).whereType<ProductSize>().toList();
   }
 
+  /// Parse carcass portions from backend
+  static List<ProductPortion> _parsePortions(List<dynamic>? raw) {
+    if (raw == null) return [];
+    return raw.map((e) {
+      if (e is Map) {
+        return ProductPortion.fromMap(Map<String, dynamic>.from(e));
+      }
+      return null;
+    }).whereType<ProductPortion>().toList();
+  }
+
   Product toDomain() {
     final effectiveSellingPrice =
         sellingPrice ?? (isOnOffer ? offerPrice ?? 0.0 : price);
@@ -323,6 +342,8 @@ class ProductModel extends Equatable {
       isBestSeller: isBestSeller,
       isAvailable: isAvailable,
       active: active,
+      isCarcass: isCarcass,
+      portions: _parsePortions(portions),
       stockQuantity: stockQuantity,
       minimumStock: minimumStock,
       weightKg: parsedWeight,

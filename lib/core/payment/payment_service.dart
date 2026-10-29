@@ -7,11 +7,24 @@ import 'payment_status.dart';
 class PaymentService {
   final Map<String, PaymentGateway> _gateways = {};
 
+  bool isGatewayRegistered(String gatewayName) =>
+      _gateways.containsKey(gatewayName.toLowerCase().trim());
+
   void registerGateway(PaymentGateway gateway) {
+    if (gateway.name.toLowerCase().trim() == 'myfatoorah') {
+      // MyFatoorah is removed from active use; only Moyasar is supported.
+      return;
+    }
     _gateways[gateway.name] = gateway;
   }
 
   Future<PaymentResult> processPayment(BuildContext context, String gatewayName, PaymentRequest request) async {
+    if (gatewayName.toLowerCase().trim() == 'myfatoorah') {
+      return const PaymentResult(
+        status: AppPaymentStatus.failed,
+        errorMessage: 'تم إيقاف بوابة ماي فاتورة؛ البوابة المعتمدة للدفع الإلكتروني هي ميسر (Moyasar).',
+      );
+    }
     final gateway = _gateways[gatewayName];
     if (gateway == null) {
       return PaymentResult(

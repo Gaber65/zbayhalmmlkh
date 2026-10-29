@@ -12,8 +12,10 @@ class Routes {
   static const String cart = '/cart';
   static const String profile = '/profile';
   static const String settings = '/settings';
+  static const String privacyPolicy = '/privacy-policy';
   static const String categories = '/categories';
   static const String productsByCategory = '/products-by-category';
+  static const String carcassPortions = '/carcass-portions';
   static const String search = '/search';
   static const String favorites = '/favorites';
   static const String offerDetails = '/offer-details';

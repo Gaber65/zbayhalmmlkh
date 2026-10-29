@@ -16,7 +16,12 @@ import '../product_details_widgets.dart';
 
 class ProductMobileView extends StatefulWidget {
   final Product product;
-  const ProductMobileView({super.key, required this.product});
+  final String? initialPortion;
+  const ProductMobileView({
+    super.key,
+    required this.product,
+    this.initialPortion,
+  });
 
   @override
   State<ProductMobileView> createState() => _ProductMobileViewState();
@@ -29,43 +34,92 @@ class _ProductMobileViewState extends State<ProductMobileView> {
   final Set<int> _selectedExcludedPartIds = {};
   double _quantity = 1.0;
   final TextEditingController _notesController = TextEditingController();
+  late String _currentPortion;
 
   @override
   void initState() {
     super.initState();
+    _currentPortion = widget.initialPortion ?? 'full';
     _initSelectedSize();
   }
 
   @override
   void didUpdateWidget(covariant ProductMobileView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_selectedSize == null) {
+    if (widget.initialPortion != null && widget.initialPortion != oldWidget.initialPortion) {
+      _currentPortion = widget.initialPortion!;
+      _initSelectedSize();
+    } else if (_selectedSize == null) {
       _initSelectedSize();
     }
   }
 
+  double get _portionFactor =>
+      _currentPortion == 'half' ? 0.5 : _currentPortion == 'quarter' ? 0.25 : 1.0;
+
+  List<ProductSize> get _filteredSizes {
+    if (!widget.product.hasSizes || widget.product.sizes.isEmpty) return const [];
+    final portionSizes = widget.product.sizes
+        .where((s) => (s.portionType ?? 'full') == _currentPortion)
+        .toList();
+    if (portionSizes.isNotEmpty) return portionSizes;
+    return widget.product.sizes;
+  }
+
   void _initSelectedSize() {
-    if (widget.product.hasSizes && widget.product.sizes.isNotEmpty) {
-      _selectedSize = widget.product.sizes.firstWhere(
+    final available = _filteredSizes;
+    if (available.isNotEmpty) {
+      _selectedSize = available.firstWhere(
         (s) => s.isDefault,
-        orElse: () => widget.product.sizes.first,
+        orElse: () => available.first,
       );
+    } else {
+      _selectedSize = null;
     }
   }
 
+  void _onSelectPortion(String portionType) {
+    if (_currentPortion == portionType) return;
+    setState(() {
+      _currentPortion = portionType;
+      _initSelectedSize();
+    });
+  }
+
   double get _currentPrice =>
-      _selectedSize != null ? _selectedSize!.price : widget.product.displayPrice;
+      _selectedSize != null ? _selectedSize!.price : (widget.product.displayPrice * _portionFactor).roundToDouble();
+
+  double get _cuttingExtra => _selectedCuttingOption?.extraPrice ?? 0.0;
+
+  double get _packagingExtra => widget.product.packagingOptions
+      .where((p) => _selectedPackagingIds.contains(p.id))
+      .fold<double>(0.0, (sum, p) => sum + (p.extraPrice ?? 0.0));
+
+  double get _unitPriceWithOptions => _currentPrice + _cuttingExtra + _packagingExtra;
 
   int get _currentCalories =>
-      _selectedSize != null ? _selectedSize!.calories : widget.product.calories;
+      _selectedSize != null ? _selectedSize!.calories : ((widget.product.calories * _portionFactor).round());
 
   int get _currentLoyaltyPoints => _selectedSize != null
       ? _selectedSize!.loyaltyPoints
-      : (widget.product.loyaltyPoints ?? 0);
+      : (((widget.product.loyaltyPoints ?? 0) * _portionFactor).round());
 
   int get _currentPointsPrice => _selectedSize != null
       ? _selectedSize!.pointsPrice
       : ((_currentPrice * 4).round());
+
+  String get _currentWeightRange {
+    if (_selectedSize != null) {
+      return _selectedSize!.effectiveWeightRange;
+    }
+    if (widget.product.weightKg != null && widget.product.weightKg! > 0) {
+      final w = widget.product.weightKg!;
+      return '${w.toStringAsFixed(w % 1 == 0 ? 0 : 1)} كجم تقريباً';
+    }
+    return widget.product.subtitle.isNotEmpty
+        ? widget.product.subtitle
+        : 'حسب الاختيار';
+  }
 
   @override
   void dispose() {
@@ -174,10 +228,101 @@ class _ProductMobileViewState extends State<ProductMobileView> {
         );
   }
 
-  Widget _imagePlaceholder(ColorScheme cs) => Container(
-        color: cs.surfaceContainerHighest,
-        child: Icon(Icons.image_not_supported_outlined,
-            size: 64, color: cs.onSurfaceVariant.withValues(alpha: 0.5)),
+  Widget _buildPortionTabs(ColorScheme cs, bool isDark, bool isAr) {
+    final portions = widget.product.effectivePortions;
+    if (portions.isEmpty) return const SizedBox.shrink();
+
+    String getPortionTitle(ProductPortion p) {
+      if (p.type == 'full') return isAr ? 'كامل' : 'Whole';
+      if (p.type == 'half') return isAr ? 'نصف' : 'Half';
+      if (p.type == 'quarter') return isAr ? 'ربع' : 'Quarter';
+      return p.name;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: isDark ? 0.5 : 0.35),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark
+              ? cs.outlineVariant.withValues(alpha: 0.3)
+              : cs.outlineVariant.withValues(alpha: 0.25),
+        ),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: portions.map((p) {
+          final isSelected = _currentPortion == p.type;
+          final portionTitle = getPortionTitle(p);
+          final activeColor = isDark ? cs.primary : const Color(0xFF9B1B30);
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => _onSelectPortion(p.type),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                decoration: BoxDecoration(
+                  color: isSelected ? activeColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: activeColor.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : null,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      portionTitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? (isDark ? cs.onPrimary : Colors.white)
+                            : cs.onSurface,
+                      ),
+                    ),
+                    if (p.startingPrice > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        isAr
+                            ? 'من ${p.startingPrice.toStringAsFixed(0)} ر.س'
+                            : 'From ${p.startingPrice.toStringAsFixed(0)} SAR',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? (isDark ? cs.onPrimary : Colors.white).withValues(alpha: 0.9)
+                              : activeColor,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _imagePlaceholder(ColorScheme cs, bool isDark) => Container(
+        color: isDark ? cs.surfaceContainerHighest : const Color(0xFFFBF6EF),
+        padding: const EdgeInsets.all(48),
+        child: Center(
+          child: Image.asset(
+            'assets/images/app_logo.png',
+            fit: BoxFit.contain,
+          ),
+        ),
       );
 
   @override
@@ -188,6 +333,7 @@ class _ProductMobileViewState extends State<ProductMobileView> {
     final s = S.of(context);
     final locale = Localizations.localeOf(context);
     final isAr = locale.languageCode == 'ar';
+    final isDark = theme.brightness == Brightness.dark;
 
     final displayTitle =
         isAr ? (product.titleAr ?? product.title) : (product.titleEn ?? product.title);
@@ -253,9 +399,9 @@ class _ProductMobileViewState extends State<ProductMobileView> {
                       ? Image.network(
                           product.imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _imagePlaceholder(cs),
+                          errorBuilder: (_, _, _) => _imagePlaceholder(cs, isDark),
                         )
-                      : _imagePlaceholder(cs),
+                      : _imagePlaceholder(cs, isDark),
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -324,6 +470,8 @@ class _ProductMobileViewState extends State<ProductMobileView> {
                     pointsPrice: _currentPointsPrice,
                   ),
                   const SizedBox(height: 12),
+                  CarcassWeightCard(weight: _currentWeightRange),
+                  const SizedBox(height: 12),
                   if (_currentCalories > 0) ...[
                     CaloriesBadgeBar(calories: _currentCalories),
                     const SizedBox(height: 10),
@@ -332,10 +480,16 @@ class _ProductMobileViewState extends State<ProductMobileView> {
                     LoyaltyRewardBar(points: _currentLoyaltyPoints),
                     const SizedBox(height: 18),
                   ],
+                  if (product.isCarcass || product.effectivePortions.isNotEmpty) ...[
+                    SectionHeader(title: isAr ? 'تقسيم الذبيحة' : 'Carcass Portion'),
+                    const SizedBox(height: 10),
+                    _buildPortionTabs(cs, isDark, isAr),
+                    const SizedBox(height: 16),
+                  ],
                   const SectionHeader(title: 'الحجم'),
                   const SizedBox(height: 10),
                   CarcassSizesSelector(
-                    sizes: product.sizes,
+                    sizes: _filteredSizes,
                     selected: _selectedSize,
                     onSelect: (size) => setState(() => _selectedSize = size),
                   ),
@@ -425,6 +579,8 @@ class _ProductMobileViewState extends State<ProductMobileView> {
                 const SizedBox(height: 20),
                 SelectionSummary(
                   product: product,
+                  selectedSize: _selectedSize,
+                  unitBasePrice: _currentPrice,
                   selectedCuttingOption: _selectedCuttingOption,
                   selectedPackagingIds: _selectedPackagingIds,
                   selectedExcludedPartIds: _selectedExcludedPartIds,
@@ -436,53 +592,118 @@ class _ProductMobileViewState extends State<ProductMobileView> {
           ),
         ],
       ),
-      bottomNavigationBar: BlocBuilder<CartCubit, CartState>(
-        builder: (ctx, cartState) {
-          final isAdding = cartState is CartItemAdding;
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: ElevatedButton(
-                onPressed: isAdding || !product.isAvailable
-                    ? null
-                    : () => _addToCart(ctx, product),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cs.primary,
-                  foregroundColor: cs.onPrimary,
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: isAdding
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.shopping_bag_outlined, size: 20),
-                          const SizedBox(width: 8),
-                          if (!product.isAvailable)
-                            Text(
-                              s.out_of_stock,
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            )
-                          else ...[
-                            Text(
-                              '${s.add_to_cart}  •  ${(_currentPrice * _quantity).toStringAsFixed(0)}',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(width: 4),
-                            const SaudiRiyalIcon(size: 15, color: Colors.white),
-                          ],
-                        ],
-                      ),
-              ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 16,
+              offset: const Offset(0, -4),
             ),
-          );
-        },
+          ],
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Quantity Stepper and Total Price matching reference design
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        (_unitPriceWithOptions * _quantity).toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: cs.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const SaudiRiyalIcon(size: 16),
+                    ],
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            if (_quantity > 1) {
+                              setState(() => _quantity -= 1);
+                            }
+                          },
+                          icon: const Icon(Icons.remove, size: 18),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            _quantity.toInt().toString(),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            setState(() => _quantity += 1);
+                          },
+                          icon: const Icon(Icons.add, size: 18),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Full-width Add to Cart Button
+              BlocBuilder<CartCubit, CartState>(
+                builder: (ctx, cartState) {
+                  final isAdding = cartState is CartItemAdding;
+                  return ElevatedButton(
+                    onPressed: isAdding || !product.isAvailable
+                        ? null
+                        : () => _addToCart(ctx, product),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: cs.primary,
+                      foregroundColor: cs.onPrimary,
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    child: isAdding
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.shopping_cart_outlined, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                !product.isAvailable ? s.out_of_stock : s.add_to_cart,
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -37,6 +37,8 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     String? notes,
     String? couponCode,
     bool? redeemPoints,
+    String? slaughterDate,
+    String? slaughterTime,
   }) async {
     emit(CheckoutLoading());
     final effectiveCouponCode = (couponCode != null && couponCode.isNotEmpty)
@@ -51,6 +53,8 @@ class CheckoutCubit extends Cubit<CheckoutState> {
       notes: notes,
       couponCode: effectiveCouponCode,
       redeemPoints: redeemPoints,
+      slaughterDate: slaughterDate,
+      slaughterTime: slaughterTime,
     );
     result.fold(
       (failure) => emit(CheckoutError(failure.error.message)),

@@ -250,7 +250,7 @@ class _ProductFormDialogState extends State<ProductFormDialog>
         'cutting_option_ids': _selectedCuttingIds.toList(),
         'packaging_ids': _selectedPackagingIds.toList(),
         'excluded_part_ids': _selectedExcludedIds.toList(),
-        if (_customSizes.isNotEmpty) 'sizes': _customSizes,
+        'sizes': _customSizes,
       };
 
       final success = await widget.onSave(data);
@@ -1155,8 +1155,11 @@ class _ProductFormDialogState extends State<ProductFormDialog>
                   runSpacing: 6,
                   children: cuttingOptions.map((opt) {
                     final selected = _selectedCuttingIds.contains(opt.id);
+                    final feeLabel = opt.extraPrice > 0
+                        ? ' (+${opt.extraPrice.toStringAsFixed(0)} ${i18n.isArabic ? "ر.س" : "SAR"})'
+                        : '';
                     return FilterChip(
-                      label: Text(opt.name),
+                      label: Text('${opt.name}$feeLabel'),
                       selected: selected,
                       selectedColor: AppColors.primaryContainer,
                       checkmarkColor: AppColors.primary,
@@ -1207,8 +1210,11 @@ class _ProductFormDialogState extends State<ProductFormDialog>
                   runSpacing: 6,
                   children: packagingOptions.map((opt) {
                     final selected = _selectedPackagingIds.contains(opt.id);
+                    final feeLabel = opt.extraPrice > 0
+                        ? ' (+${opt.extraPrice.toStringAsFixed(0)} ${i18n.isArabic ? "ر.س" : "SAR"})'
+                        : '';
                     return FilterChip(
-                      label: Text(opt.name),
+                      label: Text('${opt.name}$feeLabel'),
                       selected: selected,
                       selectedColor: AppColors.primaryContainer,
                       checkmarkColor: AppColors.primary,

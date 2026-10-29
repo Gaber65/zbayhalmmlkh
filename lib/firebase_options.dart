@@ -52,24 +52,22 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDEEEAcWh6vz2x040cAetQG2eHoMMOgCh0',
-    appId: '1:478058651243:android:eec939853477be655e5b2e',
+    appId: '1:478058651243:android:d0b2fd5aee9547055e5b2e',
     messagingSenderId: '478058651243',
     projectId: 'shop-system-d5d87',
     storageBucket: 'shop-system-d5d87.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDf0vUbbePSEV_rjTBAZ-XUznUyV2G3GCk',
-    appId: '1:478058651243:ios:1fc72b26072a2fe05e5b2e',
+    appId: '1:478058651243:ios:048dfd0fc9342f675e5b2e',
     messagingSenderId: '478058651243',
     projectId: 'shop-system-d5d87',
     storageBucket: 'shop-system-d5d87.firebasestorage.app',
     iosBundleId: 'com.zbayhalmmlkh.app',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDf0vUbbePSEV_rjTBAZ-XUznUyV2G3GCk',
-    appId: '1:478058651243:ios:1fc72b26072a2fe05e5b2e',
+    appId: '1:478058651243:ios:048dfd0fc9342f675e5b2e',
     messagingSenderId: '478058651243',
     projectId: 'shop-system-d5d87',
     storageBucket: 'shop-system-d5d87.firebasestorage.app',

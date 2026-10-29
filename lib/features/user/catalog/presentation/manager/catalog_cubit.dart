@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import '../../domain/entities/category.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import 'catalog_state.dart';
 
@@ -17,32 +19,41 @@ class CatalogCubit extends Cubit<CatalogState> {
     final offersResult = await repository.getOffers();
     final bestSellersResult = await repository.getBestSellers();
 
-    categoriesResult.fold(
-      (failure) => emit(CatalogError(failure.error.message)),
-      (categories) {
-        productsResult.fold(
-          (failure) => emit(CatalogError(failure.error.message)),
-          (products) {
-            offersResult.fold(
-              (failure) => emit(CatalogError(failure.error.message)),
-              (offers) {
-                bestSellersResult.fold(
-                  (failure) => emit(CatalogError(failure.error.message)),
-                  (bestSellers) {
-                    emit(CatalogLoaded(
-                      categories: categories,
-                      products: products,
-                      offers: offers,
-                      bestSellers: bestSellers,
-                    ));
-                  },
-                );
-              },
-            );
-          },
-        );
+    String? errorMsg;
+    final categories = categoriesResult.fold<List<Category>>(
+      (failure) {
+        errorMsg ??= failure.error.message;
+        return const [];
       },
+      (list) => list,
     );
+    final products = productsResult.fold<List<Product>>(
+      (failure) {
+        errorMsg ??= failure.error.message;
+        return const [];
+      },
+      (list) => list,
+    );
+    final offers = offersResult.fold<List<Product>>(
+      (_) => const [],
+      (list) => list,
+    );
+    final bestSellers = bestSellersResult.fold<List<Product>>(
+      (_) => const [],
+      (list) => list,
+    );
+
+    if (categories.isEmpty && products.isEmpty && errorMsg != null) {
+      emit(CatalogError(errorMsg!));
+      return;
+    }
+
+    emit(CatalogLoaded(
+      categories: categories,
+      products: products,
+      offers: offers,
+      bestSellers: bestSellers,
+    ));
   }
 
   Future<void> fetchProductsByCategory(int categoryId) async {

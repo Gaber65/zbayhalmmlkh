@@ -19,11 +19,14 @@ import '../../features/user/cart/views/cart_screen.dart';
 import '../../features/user/catalog/presentation/views/categories_screen.dart';
 import '../../features/user/catalog/presentation/views/products_by_category_screen.dart';
 import '../../features/user/catalog/domain/entities/category.dart';
+import '../../features/user/catalog/domain/entities/product.dart';
+import '../../features/user/catalog/presentation/views/carcass_portions_screen.dart';
 import '../../features/user/search/presentation/views/search_screen.dart';
 import '../../features/user/favorites/presentation/views/favorites_screen.dart';
 import '../../features/user/offers/domain/entities/offer_entity.dart';
 import '../../features/user/offers/presentation/views/offer_details_screen.dart';
 import '../../features/user/profile/presentation/views/profile_screen.dart';
+import '../../features/user/profile/presentation/views/privacy_policy_screen.dart';
 import '../../features/user/address/presentation/views/addresses_screen.dart';
 import '../../features/user/address/presentation/views/map_picker_screen.dart';
 import '../../features/user/address/presentation/views/address_form_screen.dart';
@@ -111,6 +114,13 @@ class AppRouter {
         builder: (context, state) {
           final product = state.extra;
           return ProductDetailsScreen(product: product);
+        },
+      ),
+      GoRoute(
+        path: Routes.carcassPortions,
+        builder: (context, state) {
+          final product = state.extra as Product;
+          return CarcassPortionsScreen(product: product);
         },
       ),
       GoRoute(
@@ -207,6 +217,11 @@ class AppRouter {
             builder: (context, state) => const ProfileScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: Routes.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
     ],
   );

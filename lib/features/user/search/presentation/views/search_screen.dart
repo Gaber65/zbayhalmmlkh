@@ -1,3 +1,4 @@
+import 'package:dhabayih_lmamlaka/features/user/catalog/domain/entities/product.dart';
 import 'package:flutter/material.dart';
 import 'package:dhabayih_lmamlaka/core/theme/app_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,14 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onProductTap(BuildContext context, Product product) {
+    if (product.isCarcass || product.effectivePortions.isNotEmpty) {
+      context.push(Routes.carcassPortions, extra: product);
+    } else {
+      context.push(Routes.productDetails, extra: product);
+    }
   }
 
   @override
@@ -127,12 +136,8 @@ class _SearchScreenState extends State<SearchScreen> {
                     title: product.title,
                     subtitle: product.subtitle,
                     price: product.price,
-                    onAddToCart: () {
-                      context.push(Routes.productDetails, extra: product);
-                    },
-                    onTap: () {
-                      context.push(Routes.productDetails, extra: product);
-                    },
+                    onAddToCart: () => _onProductTap(context, product),
+                    onTap: () => _onProductTap(context, product),
                   );
                 },
               );

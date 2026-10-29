@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // Explicit imports from Moyasar to avoid naming conflicts with our AppPaymentStatus.
 import 'package:moyasar/moyasar.dart'
     show PaymentConfig, CreditCard, STCPay, PaymentResponse, PaymentStatus;
+import 'package:dhabayih_lmamlaka/core/payment/moyasar_payment_gateway.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
 
 /// Native payment screen using the Moyasar embedded SDK.
@@ -37,15 +38,31 @@ class NativePaymentScreen extends StatefulWidget {
 }
 
 class _NativePaymentScreenState extends State<NativePaymentScreen> {
-  late final PaymentConfig _paymentConfig;
+  PaymentConfig? _paymentConfig;
+  String? _configError;
 
   bool get _isStcPay => widget.paymentMethodCode == 'stc_pay';
 
   @override
   void initState() {
     super.initState();
+    if (!MoyasarPaymentGateway.isValidPublishableKey(widget.publishableKey)) {
+      _configError =
+          'مفتاح بوابة الدفع ميسر (Moyasar) غير مهيأ بشكل صحيح. يرجى مراجعة إعدادات الدفع أو اختيار وسيلة دفع أخرى.';
+      return;
+    }
+    if (widget.amountMinorUnits < 100 || widget.totalAmount <= 0) {
+      _configError =
+          'الحد الأدنى للمبلغ المسموح به للدفع عبر ميسر هو 1.00 ر.س.';
+      return;
+    }
+    if (widget.orderNumber.trim().isEmpty) {
+      _configError = 'وصف الطلب غير صالح لعملية الدفع عبر ميسر.';
+      return;
+    }
+
     _paymentConfig = PaymentConfig(
-      publishableApiKey: widget.publishableKey,
+      publishableApiKey: widget.publishableKey.trim(),
       amount: widget.amountMinorUnits,
       description: 'طلب رقم ${widget.orderNumber}',
       metadata: {
@@ -130,15 +147,54 @@ class _NativePaymentScreenState extends State<NativePaymentScreen> {
             _buildOrderSummaryCard(theme, cs),
             const SizedBox(height: 24),
 
-            // ── Payment Widget (Card or STC Pay) ─────────────────────────
-            if (_isStcPay)
+            // ── Payment Widget (Card or STC Pay) or Safe Config Error ────
+            if (_configError != null || _paymentConfig == null)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      color: AppColors.error,
+                      size: 40,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _configError ??
+                          'تعذر تهيئة بوابة الدفع ميسر حالياً.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(null),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('العودة لاختيار وسيلة دفع أخرى'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_isStcPay)
               STCPay(
-                config: _paymentConfig,
+                config: _paymentConfig!,
                 onPaymentResult: _onPaymentResult,
               )
             else
               CreditCard(
-                config: _paymentConfig,
+                config: _paymentConfig!,
                 onPaymentResult: _onPaymentResult,
               ),
           ],

@@ -94,13 +94,28 @@ class InvoicePreviewSheet extends StatelessWidget {
     if (order.shippingAddress != null && order.shippingAddress!.isNotEmpty) {
       buffer.writeln('📍 العنوان: ${order.shippingAddress}');
     }
+    if ((order.slaughterDate != null && order.slaughterDate!.isNotEmpty) ||
+        (order.slaughterTime != null && order.slaughterTime!.isNotEmpty)) {
+      buffer.writeln(
+        '🗓️ موعد الذبح والتجهيز: ${[order.slaughterDate, order.slaughterTime].whereType<String>().where((e) => e.isNotEmpty).join(" - ")}',
+      );
+    }
     buffer.writeln('━━━━━━━━━━━━━━━━━━━━');
     buffer.writeln('🛒 *المشتريات:*');
     for (final line in order.lines) {
       buffer.write('• ${line.name} (x${line.quantity.toInt()}): ${line.priceSubtotal.toStringAsFixed(2)} ر.س');
       final options = <String>[];
-      if (line.cuttingOption != null) options.add('تقطيع: ${line.cuttingOption!.name}');
-      if (line.packaging != null) options.add('تغليف: ${line.packaging!.name}');
+      if (line.sizeName != null && line.sizeName!.isNotEmpty) {
+        options.add('الحجم: ${line.sizeName}');
+      }
+      if (line.cuttingOption != null) {
+        final fee = line.cuttingPrice > 0 ? ' (+${line.cuttingPrice.toStringAsFixed(0)} ر.س)' : '';
+        options.add('تقطيع: ${line.cuttingOption!.name}$fee');
+      }
+      if (line.packaging != null) {
+        final fee = line.packagingPrice > 0 ? ' (+${line.packagingPrice.toStringAsFixed(0)} ر.س)' : '';
+        options.add('تغليف: ${line.packaging!.name}$fee');
+      }
       if (options.isNotEmpty) {
         buffer.write(' [${options.join(' - ')}]');
       }
@@ -111,13 +126,11 @@ class InvoicePreviewSheet extends StatelessWidget {
     if (order.discountAmount > 0) {
       buffer.writeln('🏷️ الخصم: -${order.discountAmount.toStringAsFixed(2)} ر.س');
     }
+    if (order.loyaltyDiscountAmount > 0) {
+      buffer.writeln('⭐ خصم نقاط الولاء: -${order.loyaltyDiscountAmount.toStringAsFixed(2)} ر.س');
+    }
     if (order.taxAmount > 0) {
       buffer.writeln('📊 الضريبة (15%): ${order.taxAmount.toStringAsFixed(2)} ر.س');
-    }
-    if (order.deliveryFee > 0) {
-      buffer.writeln('🚚 التوصيل المبرد: ${order.deliveryFee.toStringAsFixed(2)} ر.س');
-    } else {
-      buffer.writeln('🚚 التوصيل: مجاني');
     }
     buffer.writeln('💵 *الإجمالي النهائي: ${order.total.toStringAsFixed(2)} ر.س*');
     buffer.writeln('━━━━━━━━━━━━━━━━━━━━');
@@ -185,42 +198,46 @@ class InvoicePreviewSheet extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(8.r),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Icon(
-                            Icons.receipt_long_rounded,
-                            color: AppColors.primary,
-                            size: 22,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'فاتورة ضريبية مبسطة',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.sp,
-                              ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(8.r),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12.r),
                             ),
-                            Text(
-                              order.name,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontFamily: 'monospace',
-                                color: cs.onSurfaceVariant,
-                              ),
+                            child: Icon(
+                              Icons.receipt_long_rounded,
+                              color: AppColors.primary,
+                              size: 22,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          SizedBox(width: 10.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'فاتورة ضريبية مبسطة',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16.sp,
+                                  ),
+                                ),
+                                Text(
+                                  order.name,
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    fontFamily: 'monospace',
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded),
@@ -342,6 +359,18 @@ class InvoicePreviewSheet extends StatelessWidget {
                           const Divider(height: 12),
                           _buildMetaRow('العنوان / الفرع', order.shippingAddress!, cs),
                         ],
+                        if ((order.slaughterDate != null && order.slaughterDate!.isNotEmpty) ||
+                            (order.slaughterTime != null && order.slaughterTime!.isNotEmpty)) ...[
+                          const Divider(height: 12),
+                          _buildMetaRow(
+                            'موعد الذبح والتجهيز',
+                            [order.slaughterDate, order.slaughterTime]
+                                .whereType<String>()
+                                .where((e) => e.isNotEmpty)
+                                .join(' • '),
+                            cs,
+                          ),
+                        ],
                         const Divider(height: 12),
                         _buildMetaRow(
                           'طريقة السداد',
@@ -421,18 +450,33 @@ class InvoicePreviewSheet extends StatelessWidget {
                                 color: cs.onSurfaceVariant,
                               ),
                             ),
-                            if (line.cuttingOption != null || line.packaging != null || line.excludedParts.isNotEmpty) ...[
+                            if ((line.sizeName != null && line.sizeName!.isNotEmpty) ||
+                                line.cuttingOption != null ||
+                                line.packaging != null ||
+                                line.packagingOptions.isNotEmpty ||
+                                line.excludedParts.isNotEmpty) ...[
                               SizedBox(height: 6.h),
                               Wrap(
                                 spacing: 6.w,
                                 runSpacing: 4.h,
                                 children: [
+                                  if (line.sizeName != null && line.sizeName!.isNotEmpty)
+                                    _buildBadge('📏 الحجم: ${line.sizeName!}'),
                                   if (line.cuttingOption != null)
-                                    _buildBadge('✂️ ${line.cuttingOption!.name}'),
+                                    _buildBadge(
+                                      '✂️ ${line.cuttingOption!.name}${line.cuttingPrice > 0 ? " (+${line.cuttingPrice.toStringAsFixed(0)} ر.س)" : ""}',
+                                    ),
                                   if (line.packaging != null)
-                                    _buildBadge('📦 ${line.packaging!.name}'),
+                                    _buildBadge(
+                                      '📦 ${line.packaging!.name}${line.packagingPrice > 0 ? " (+${line.packagingPrice.toStringAsFixed(0)} ر.س)" : ""}',
+                                    )
+                                  else
+                                    for (final pkg in line.packagingOptions)
+                                      _buildBadge(
+                                        '📦 ${pkg.name}${(pkg.extraPrice ?? 0) > 0 ? " (+${pkg.extraPrice!.toStringAsFixed(0)} ر.س)" : ""}',
+                                      ),
                                   if (line.excludedParts.isNotEmpty)
-                                    _buildBadge('🚫 بدون: ${line.excludedParts.map((p) => p.name).join(", ")}'),
+                                    _buildBadge('🚫 بدون: ${line.excludedParts.map((p) => p.name).join("، ")}'),
                                 ],
                               ),
                             ],
@@ -463,28 +507,30 @@ class InvoicePreviewSheet extends StatelessWidget {
                         ],
                         if (order.loyaltyDiscountAmount > 0) ...[
                           SizedBox(height: 6.h),
-                          _buildTotalLine('خصم نقاط الولاء:', '- ${order.loyaltyDiscountAmount.toStringAsFixed(2)} ر.س', cs, isDiscount: true),
+                          _buildTotalLine(
+                            'خصم نقاط الولاء${order.pointsRedeemed > 0 ? " (${order.pointsRedeemed} نقطة)" : ""}:',
+                            '- ${order.loyaltyDiscountAmount.toStringAsFixed(2)} ر.س',
+                            cs,
+                            isDiscount: true,
+                          ),
                         ],
                         SizedBox(height: 6.h),
                         _buildTotalLine('ضريبة القيمة المضافة (15%):', '${order.taxAmount.toStringAsFixed(2)} ر.س', cs),
-                        SizedBox(height: 6.h),
-                        _buildTotalLine(
-                          'رسوم التوصيل المبرد:',
-                          order.deliveryFee > 0 ? '${order.deliveryFee.toStringAsFixed(2)} ر.س' : 'مجاني',
-                          cs,
-                        ),
                         const Divider(height: 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'الإجمالي الكلي المستحق:',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 14.sp,
-                                color: AppColors.primary,
+                            Expanded(
+                              child: Text(
+                                'الإجمالي الكلي المستحق:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 14.sp,
+                                  color: AppColors.primary,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               '${order.total.toStringAsFixed(2)} ر.س',
                               style: TextStyle(
@@ -614,13 +660,16 @@ class InvoicePreviewSheet extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: isDiscount ? Colors.red : cs.onSurfaceVariant,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: isDiscount ? Colors.red : cs.onSurfaceVariant,
+            ),
           ),
         ),
+        const SizedBox(width: 8),
         Text(
           value,
           style: TextStyle(

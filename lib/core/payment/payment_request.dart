@@ -8,7 +8,7 @@ class PaymentRequest {
   final int? amountMinorUnits;
   final String? paymentUrl;
 
-  PaymentRequest({
+  const PaymentRequest({
     required this.orderId,
     required this.orderNumber,
     required this.amount,
