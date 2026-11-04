@@ -186,3 +186,47 @@ class CategoryChipSkeleton extends StatelessWidget {
     );
   }
 }
+
+/// Order Card Skeleton for orders screen.
+class OrderCardSkeleton extends StatelessWidget {
+  const OrderCardSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShimmerLoading(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SkeletonBox(width: 100, height: 16, borderRadius: 4),
+                SkeletonBox(width: 70, height: 24, borderRadius: 12),
+              ],
+            ),
+            SizedBox(height: 12),
+            SkeletonBox(width: 140, height: 12, borderRadius: 4),
+            SizedBox(height: 8),
+            SkeletonBox(width: 90, height: 12, borderRadius: 4),
+            Divider(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SkeletonBox(width: 80, height: 16, borderRadius: 4),
+                SkeletonBox(width: 100, height: 18, borderRadius: 4),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

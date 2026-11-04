@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/product_card.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/responsive_layout.dart';
+import 'package:dhabayih_lmamlaka/core/widgets/skeleton_loading.dart';
 import '../manager/favorites_cubit.dart';
 import '../manager/favorites_state.dart';
 
@@ -54,8 +55,20 @@ class FavoritesScreen extends StatelessWidget {
           }
         },
         builder: (context, state) {
+          final isMobile = ResponsiveLayout.isMobile(context);
+
           if (state is FavoritesLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isMobile ? 2 : 4,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.65,
+              ),
+              itemCount: 6,
+              itemBuilder: (context, index) => const ProductCardSkeleton(),
+            );
           }
 
           if (state is FavoritesError) {
@@ -146,8 +159,6 @@ class FavoritesScreen extends StatelessWidget {
               ),
             );
           }
-
-          final isMobile = ResponsiveLayout.isMobile(context);
 
           return RefreshIndicator(
             onRefresh: () => context.read<FavoritesCubit>().loadFavorites(),
