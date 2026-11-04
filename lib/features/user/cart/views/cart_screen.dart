@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/widgets/skeleton_loading.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dhabayih_lmamlaka/core/di/injection.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
@@ -80,9 +81,17 @@ class _CartScreenState extends State<CartScreen> {
             body: isGuest
                 ? const GuestPromptWidget()
                 : BlocBuilder<CartCubit, CartState>(
+                    buildWhen: (previous, current) {
+                      // Prevent rebuilding the full cart screen during minor action states
+                      return current is! CartItemAdding;
+                    },
                     builder: (context, state) {
                       if (state is CartLoading || state is CartInitial) {
-                        return const Center(child: CircularProgressIndicator());
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: 4,
+                          itemBuilder: (context, index) => const ProductCardSkeleton(isHorizontal: true),
+                        );
                       } else if (state is CartError) {
                         return _buildErrorView(context, state.message);
                       } else if (state is CartLoaded) {
