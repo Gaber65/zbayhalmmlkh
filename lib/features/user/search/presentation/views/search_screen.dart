@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/product_card.dart';
+import 'package:dhabayih_lmamlaka/core/widgets/skeleton_loading.dart';
 import '../manager/search_cubit.dart';
 import '../manager/search_state.dart';
 import 'package:dhabayih_lmamlaka/core/di/injection.dart';
@@ -95,7 +96,17 @@ class _SearchScreenState extends State<SearchScreen> {
         body: BlocBuilder<SearchCubit, SearchState>(
           builder: (context, state) {
             if (state is SearchLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return GridView.builder(
+                padding: const EdgeInsets.all(24.0),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.7,
+                ),
+                itemCount: 6,
+                itemBuilder: (context, index) => const ProductCardSkeleton(),
+              );
             } else if (state is SearchError) {
               return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
             } else if (state is SearchInitial) {

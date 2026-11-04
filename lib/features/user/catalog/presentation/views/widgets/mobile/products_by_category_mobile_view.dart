@@ -18,6 +18,7 @@ import 'package:dhabayih_lmamlaka/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dhabayih_lmamlaka/core/widgets/skeleton_loading.dart';
 
 class ProductsByCategoryMobileView extends StatefulWidget {
   final Category category;
@@ -214,8 +215,16 @@ class _ProductsByCategoryMobileViewState
               builder: (context, state) {
                 if (state is ProductsByCategoryLoading ||
                     state is CatalogInitial) {
-                  return Center(
-                    child: CircularProgressIndicator(color: p.red),
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(18),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: 0.68,
+                    ),
+                    itemCount: 6,
+                    itemBuilder: (context, index) => const ProductCardSkeleton(),
                   );
                 } else if (state is CatalogError) {
                   return Center(
