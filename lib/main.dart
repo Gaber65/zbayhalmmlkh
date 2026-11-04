@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 /// Entry point for the Dhabayih Lmamlaka Flutter application.
 ///
 /// This file initializes core application services including system configuration,
@@ -83,6 +84,9 @@ void _setupPushNotifications() {
 /// 7. Launches [MyApp] wrapped with global BLoC providers.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Font Optimization: Disable HTTP runtime fetching of fonts to prevent jank and network calls
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
