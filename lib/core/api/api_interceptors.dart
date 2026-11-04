@@ -163,7 +163,15 @@ class AuthInterceptor extends Interceptor {
             currentLoc == Routes.splash ||
             currentLoc == Routes.onboarding;
 
-        if (!isAuthPage) {
+        // Never aggressively force redirect from main browsing screens (Home, Categories, Cart, Orders, Profile).
+        // Let them gracefully display their built-in GuestPromptWidget without looping!
+        final isMainBrowsingPage = currentLoc == Routes.home ||
+            currentLoc == Routes.categories ||
+            currentLoc == Routes.cart ||
+            currentLoc == Routes.orders ||
+            currentLoc == Routes.profile;
+
+        if (!isAuthPage && !isMainBrowsingPage) {
           print('🚀 Redirecting to ${Routes.login} from $currentLoc');
           AppRouter.router.go(Routes.login);
         }
