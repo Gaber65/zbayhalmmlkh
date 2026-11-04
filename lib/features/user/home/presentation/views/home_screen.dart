@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' hide Category;
@@ -5,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -87,6 +90,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _fetchLiveUserPointsAndBalance() async {
     if (!getIt.isRegistered<Dio>()) return;
+    if (getIt.isRegistered<SharedPreferences>()) {
+      final cached = getIt<SharedPreferences>().getString('CACHED_USER');
+      if (cached == null || cached.isEmpty) {
+        return; // Guest user: do not call /api/v1/me or /api/v1/loyalty/summary
+      }
+      try {
+        final map = json.decode(cached);
+        final token = map is Map ? (map['access_token'] ?? map['token']) : null;
+        if (token == null || token.toString().trim().isEmpty) {
+          return;
+        }
+      } catch (_) {
+        return;
+      }
+    }
     final dio = getIt<Dio>();
     int? fetchedPoints;
     double? fetchedBalance;

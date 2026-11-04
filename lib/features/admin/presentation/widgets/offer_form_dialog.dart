@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:iconly/iconly.dart';
+import 'package:flutter_iconly_plus/flutter_iconly_plus.dart';
 import '../../../../core/theme/colors.dart';
 import '../../../user/offers/domain/entities/offer_entity.dart';
 import '../../core/admin_i18n.dart';

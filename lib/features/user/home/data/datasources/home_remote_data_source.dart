@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dhabayih_lmamlaka/core/api/server_strings.dart';
+import 'package:dhabayih_lmamlaka/core/di/injection.dart';
 import 'package:dhabayih_lmamlaka/core/error/exceptions.dart';
 
 import '../models/home_response_model.dart';
@@ -42,7 +46,7 @@ class HomeRemoteDataSourceImpl
             highlightMap['balance'] ?? highlightMap['wallet_balance'],
           );
 
-          if (pts <= 0) {
+          if (pts <= 0 && _isUserLoggedIn()) {
             final fetched = await _fetchLiveUserPointsAndBalance();
             if (fetched.points > 0) pts = fetched.points;
             if (bal <= 0 && fetched.balance > 0) bal = fetched.balance;
@@ -68,7 +72,26 @@ class HomeRemoteDataSourceImpl
     }
   }
 
+  bool _isUserLoggedIn() {
+    try {
+      if (getIt.isRegistered<SharedPreferences>()) {
+        final cached = getIt<SharedPreferences>().getString('CACHED_USER');
+        if (cached != null && cached.isNotEmpty) {
+          final map = json.decode(cached);
+          if (map is Map) {
+            final token = map['access_token'] ?? map['token'];
+            return token != null && token.toString().trim().isNotEmpty;
+          }
+        }
+      }
+    } catch (_) {}
+    return false;
+  }
+
   Future<({int points, double balance})> _fetchLiveUserPointsAndBalance() async {
+    if (!_isUserLoggedIn()) {
+      return (points: 0, balance: 0.0);
+    }
     int points = 0;
     double balance = 0.0;
 

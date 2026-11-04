@@ -137,6 +137,12 @@ class AuthInterceptor extends Interceptor {
   }
 
   Future<void> _handleSessionExpired() async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) {
+      // User is already a guest / unauthenticated. Do not redirect.
+      return;
+    }
+
     print('🔒 Session expired or unauthorized. Clearing credentials & redirecting to Login screen...');
     try {
       await secureStorage.delete(key: 'access_token');
@@ -191,7 +197,14 @@ class AuthInterceptor extends Interceptor {
         path.contains('/auth/login') ||
         path.contains('/auth/register');
 
-    if (err.response?.statusCode == 401 && !isAuthRoute) {
+    final authHeader = err.requestOptions.headers['Authorization'] as String?;
+    final hadBearerToken = authHeader != null &&
+        authHeader.trim().isNotEmpty &&
+        authHeader.trim().startsWith('Bearer ') &&
+        authHeader.trim().length > 7 &&
+        authHeader.trim() != 'Bearer null';
+
+    if (err.response?.statusCode == 401 && !isAuthRoute && hadBearerToken) {
       print('🔄 401 Unauthorized received on $path, attempting token refresh...');
 
       // If a refresh is already in progress, await its result

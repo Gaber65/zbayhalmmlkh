@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:iconly/iconly.dart';
+import 'package:flutter_iconly_plus/flutter_iconly_plus.dart';
 
 /// Centralized Icon definition class using the Iconly package.
 /// This ensures consistent iconography across the application.

@@ -12,11 +12,14 @@ class CategoryModel extends Equatable {
   final String name;
   @JsonKey(name: 'image_url', defaultValue: '')
   final String imageUrl;
+  @JsonKey(name: 'sequence', defaultValue: 10)
+  final int sequence;
 
   const CategoryModel({
     required this.id,
     this.name = '',
     this.imageUrl = '',
+    this.sequence = 10,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) => _$CategoryModelFromJson(json);
@@ -36,9 +39,10 @@ class CategoryModel extends Equatable {
       id: id,
       name: name,
       imageUrl: img,
+      sequence: sequence,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, imageUrl];
+  List<Object?> get props => [id, name, imageUrl, sequence];
 }

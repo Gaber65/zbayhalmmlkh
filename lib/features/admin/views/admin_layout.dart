@@ -29,7 +29,7 @@ import '../presentation/manager/admin_branches_cubit.dart';
 import '../presentation/views/admin_branches_view.dart';
 import '../presentation/widgets/admin_drawer.dart';
 import '../presentation/widgets/admin_notifications_sheet.dart';
-import 'package:iconly/iconly.dart';
+import 'package:flutter_iconly_plus/flutter_iconly_plus.dart';
 
 class AdminLayout extends StatefulWidget {
   const AdminLayout({super.key});

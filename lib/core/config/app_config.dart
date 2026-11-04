@@ -9,13 +9,12 @@ class AppConfig {
   static const String buildNumber = '1';
 
   // Environment
-  static const bool isProduction = true;
-  static const bool enableLogging = false;
+  static const bool isProduction = false;
+  static const bool enableLogging = true;
 
   // Local Server Configuration
   static const String localPort = '8069';
-  static const String localIp =
-      '192.168.1.4'; // Tested & verified: returns 200 OK directly
+  static const String localIp = '192.168.1.6';
 
   // API Configuration
   static String get baseUrl {

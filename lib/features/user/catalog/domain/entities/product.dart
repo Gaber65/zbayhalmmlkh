@@ -198,6 +198,7 @@ class Product extends Equatable {
   final String? categoryName;
   final int? loyaltyPoints;
   final int calories;
+  final int sequence;
   final bool hasSizes;
   final List<ProductSize> sizes;
   final bool isCarcass;
@@ -244,6 +245,7 @@ class Product extends Equatable {
     this.categoryName,
     this.loyaltyPoints,
     this.calories = 0,
+    this.sequence = 10,
     this.hasSizes = false,
     this.sizes = const [],
     this.cuttingOptions = const [],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconly/iconly.dart';
+import 'package:flutter_iconly_plus/flutter_iconly_plus.dart';
 import 'package:dhabayih_lmamlaka/core/di/injection.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';

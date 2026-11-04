@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../../../core/api/server_strings.dart';
 import '../../../../../../../core/di/injection.dart';
@@ -189,6 +192,21 @@ class _KingdomWalletAndLoyaltyViewState
 
   Future<void> _fetchLiveBackendPoints() async {
     if (!getIt.isRegistered<Dio>()) return;
+    if (getIt.isRegistered<SharedPreferences>()) {
+      final cached = getIt<SharedPreferences>().getString('CACHED_USER');
+      if (cached == null || cached.isEmpty) {
+        return; // Guest user: do not call /api/v1/me or /api/v1/loyalty/summary
+      }
+      try {
+        final map = json.decode(cached);
+        final token = map is Map ? (map['access_token'] ?? map['token']) : null;
+        if (token == null || token.toString().trim().isEmpty) {
+          return;
+        }
+      } catch (_) {
+        return;
+      }
+    }
     setState(() => _loading = true);
     final dio = getIt<Dio>();
     int fetchedPoints = _points;
