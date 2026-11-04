@@ -83,12 +83,27 @@ class OrdersListTab extends StatefulWidget {
 
 class _OrdersListTabState extends State<OrdersListTab> {
   late OrderCubit _cubit;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _cubit = getIt<OrderCubit>();
+    _scrollController.addListener(_onScroll);
     _loadOrders();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      _cubit.loadMoreOrders(state: widget.stateFilter);
+    }
   }
 
   void _loadOrders() {
@@ -193,9 +208,25 @@ class _OrdersListTabState extends State<OrdersListTab> {
               onRefresh: () async => _loadOrders(),
               color: AppColors.primary,
               child: ListView.builder(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(16),
-                itemCount: orders.length,
+                itemCount: orders.length + (_cubit.hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
+                  if (index >= orders.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
                   final order = orders[index];
                   final statusColor = _getStatusColor(order.state, cs);
 
