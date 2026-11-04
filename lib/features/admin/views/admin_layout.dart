@@ -192,7 +192,7 @@ class _AdminLayoutState extends State<AdminLayout> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
-                  child: Image.asset('assets/images/app_logo.png', fit: BoxFit.contain),
+                  child: Image.asset('assets/images/app_logo.webp', fit: BoxFit.contain),
                 ),
               ),
               const SizedBox(width: 10),

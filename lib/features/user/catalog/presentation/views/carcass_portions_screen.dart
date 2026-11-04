@@ -260,7 +260,7 @@ class CarcassPortionsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       child: Center(
         child: Image.asset(
-          'assets/images/app_logo.png',
+          'assets/images/app_logo.webp',
           fit: BoxFit.contain,
         ),
       ),
@@ -399,7 +399,7 @@ class _PortionCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Center(
         child: Image.asset(
-          'assets/images/app_logo.png',
+          'assets/images/app_logo.webp',
           fit: BoxFit.contain,
         ),
       ),

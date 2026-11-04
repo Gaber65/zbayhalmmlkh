@@ -383,12 +383,12 @@ class KSvgIcon extends StatelessWidget {
 class KAssets {
   KAssets._();
 
-  static const meat = 'assets/images/home/meat.jpg';
-  static const camel = 'assets/images/home/camel.jpg';
-  static const sheep = 'assets/images/home/sheep.jpg';
-  static const cow = 'assets/images/home/cow.jpg';
-  static const lamb = 'assets/images/home/lamb.jpg';
-  static const chicken = 'assets/images/home/chicken.jpg';
+  static const meat = 'assets/images/home/meat.webp';
+  static const camel = 'assets/images/home/camel.webp';
+  static const sheep = 'assets/images/home/sheep.webp';
+  static const cow = 'assets/images/home/cow.webp';
+  static const lamb = 'assets/images/home/lamb.webp';
+  static const chicken = 'assets/images/home/chicken.webp';
 
   /// Picks a fitting bundled photo for a category/product name.
   static String forName(String? name) {

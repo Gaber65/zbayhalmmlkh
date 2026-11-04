@@ -21,6 +21,8 @@ class CatalogRemoteDataSourceImpl with DioErrorHandler implements CatalogRemoteD
   final SharedPreferences prefs;
 
   static const String _categoriesCacheKey = 'cached_catalog_categories_v1';
+  static const String _categoriesCacheTimeKey = 'cached_catalog_categories_time_v1';
+  static const Duration _cacheTtl = Duration(hours: 24);
 
   CatalogRemoteDataSourceImpl({
     required this.dio,
@@ -35,9 +37,10 @@ class CatalogRemoteDataSourceImpl with DioErrorHandler implements CatalogRemoteD
         final dynamic responseData = response.data['data'] ?? response.data;
         final dynamic categoriesList = responseData is Map ? responseData['categories'] : responseData;
         if (categoriesList is List) {
-          // Persist categories in background for instant cache-first load
+          // Persist categories and timestamp in background with 24h TTL
           try {
             await prefs.setString(_categoriesCacheKey, jsonEncode(categoriesList));
+            await prefs.setInt(_categoriesCacheTimeKey, DateTime.now().millisecondsSinceEpoch);
           } catch (_) {}
           return categoriesList.map((e) => CategoryModel.fromJson(e)).toList();
         } else {
@@ -51,9 +54,13 @@ class CatalogRemoteDataSourceImpl with DioErrorHandler implements CatalogRemoteD
         );
       }
     } on DioException catch (e) {
-      // Offline / network fallback: return cached categories if available
+      // Offline / network fallback: check cache and TTL
       final cachedJson = prefs.getString(_categoriesCacheKey);
-      if (cachedJson != null && cachedJson.isNotEmpty) {
+      final cacheTimestamp = prefs.getInt(_categoriesCacheTimeKey);
+      final isExpired = cacheTimestamp != null &&
+          DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(cacheTimestamp)) > _cacheTtl;
+
+      if (cachedJson != null && cachedJson.isNotEmpty && !isExpired) {
         try {
           final decoded = jsonDecode(cachedJson);
           if (decoded is List) {

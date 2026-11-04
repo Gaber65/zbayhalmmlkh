@@ -294,7 +294,7 @@ class _ProductWebViewState extends State<ProductWebView> {
     padding: const EdgeInsets.all(48),
     child: Center(
       child: Image.asset(
-        'assets/images/app_logo.png',
+        'assets/images/app_logo.webp',
         fit: BoxFit.contain,
       ),
     ),
