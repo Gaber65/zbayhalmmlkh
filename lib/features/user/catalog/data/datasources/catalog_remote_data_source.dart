@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dhabayih_lmamlaka/core/api/server_strings.dart';
 import 'package:dhabayih_lmamlaka/core/error/exceptions.dart';
 import '../../../../../core/network/error_message_model.dart';
@@ -16,8 +18,14 @@ abstract class CatalogRemoteDataSource {
 @LazySingleton(as: CatalogRemoteDataSource)
 class CatalogRemoteDataSourceImpl with DioErrorHandler implements CatalogRemoteDataSource {
   final Dio dio;
+  final SharedPreferences prefs;
 
-  CatalogRemoteDataSourceImpl({required this.dio});
+  static const String _categoriesCacheKey = 'cached_catalog_categories_v1';
+
+  CatalogRemoteDataSourceImpl({
+    required this.dio,
+    required this.prefs,
+  });
 
   @override
   Future<List<CategoryModel>> getCategories() async {
@@ -27,6 +35,10 @@ class CatalogRemoteDataSourceImpl with DioErrorHandler implements CatalogRemoteD
         final dynamic responseData = response.data['data'] ?? response.data;
         final dynamic categoriesList = responseData is Map ? responseData['categories'] : responseData;
         if (categoriesList is List) {
+          // Persist categories in background for instant cache-first load
+          try {
+            await prefs.setString(_categoriesCacheKey, jsonEncode(categoriesList));
+          } catch (_) {}
           return categoriesList.map((e) => CategoryModel.fromJson(e)).toList();
         } else {
           throw ServerException(
@@ -39,6 +51,16 @@ class CatalogRemoteDataSourceImpl with DioErrorHandler implements CatalogRemoteD
         );
       }
     } on DioException catch (e) {
+      // Offline / network fallback: return cached categories if available
+      final cachedJson = prefs.getString(_categoriesCacheKey);
+      if (cachedJson != null && cachedJson.isNotEmpty) {
+        try {
+          final decoded = jsonDecode(cachedJson);
+          if (decoded is List) {
+            return decoded.map((e) => CategoryModel.fromJson(e as Map<String, dynamic>)).toList();
+          }
+        } catch (_) {}
+      }
       throw handleDioError(e);
     }
   }

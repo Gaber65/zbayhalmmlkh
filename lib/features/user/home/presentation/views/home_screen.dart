@@ -106,32 +106,41 @@ class _HomeScreenState extends State<HomeScreen> {
       return null;
     }
 
-    try {
-      final meRes = await dio.get(ServerStrings.profile);
-      final raw = meRes.data;
-      final data = raw is Map<String, dynamic>
-          ? (raw['data'] is Map<String, dynamic>
-              ? raw['data'] as Map<String, dynamic>
-              : raw)
-          : null;
-      if (data != null) {
-        final pts = parseInt(
-          data['loyalty_points'] ??
-              data['points'] ??
-              data['current_points'] ??
-              data['total_points'],
-        );
-        final bal = parseDouble(
-          data['balance'] ?? data['wallet_balance'] ?? data['credit'],
-        );
-        if (pts != null) fetchedPoints = pts;
-        if (bal != null && bal > 0) fetchedBalance = bal;
-      }
-    } catch (_) {}
+    // Fetch profile and loyalty summary in parallel to avoid sequential network delays
+    final results = await Future.wait([
+      dio.get(ServerStrings.profile).then<dynamic>((r) => r).catchError((_) => null),
+      dio.get(ServerStrings.loyaltySummary).then<dynamic>((r) => r).catchError((_) => null),
+    ]);
 
-    if (fetchedPoints == null || fetchedPoints <= 0) {
+    final meRes = results[0];
+    final loyRes = results[1];
+
+    if (meRes != null) {
       try {
-        final loyRes = await dio.get(ServerStrings.loyaltySummary);
+        final raw = meRes.data;
+        final data = raw is Map<String, dynamic>
+            ? (raw['data'] is Map<String, dynamic>
+                ? raw['data'] as Map<String, dynamic>
+                : raw)
+            : null;
+        if (data != null) {
+          final pts = parseInt(
+            data['loyalty_points'] ??
+                data['points'] ??
+                data['current_points'] ??
+                data['total_points'],
+          );
+          final bal = parseDouble(
+            data['balance'] ?? data['wallet_balance'] ?? data['credit'],
+          );
+          if (pts != null) fetchedPoints = pts;
+          if (bal != null && bal > 0) fetchedBalance = bal;
+        }
+      } catch (_) {}
+    }
+
+    if ((fetchedPoints == null || fetchedPoints <= 0) && loyRes != null) {
+      try {
         final raw = loyRes.data;
         final data = raw is Map<String, dynamic>
             ? (raw['data'] is Map<String, dynamic>

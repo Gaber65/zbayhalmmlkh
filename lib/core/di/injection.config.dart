@@ -160,6 +160,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i932.NetworkInfo>(
       () => _i932.NetworkInfoImpl(gh<_i973.InternetConnectionChecker>()),
     );
+    gh.lazySingleton<_i607.CatalogRemoteDataSource>(
+      () => _i607.CatalogRemoteDataSourceImpl(
+        dio: gh<_i361.Dio>(),
+        prefs: gh<_i460.SharedPreferences>(),
+      ),
+    );
     gh.lazySingleton<_i962.AppCubit>(
       () => _i962.AppCubit(gh<_i460.SharedPreferences>()),
     );
@@ -188,9 +194,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i707.HomeRemoteDataSource>(
       () => _i707.HomeRemoteDataSourceImpl(dio: gh<_i361.Dio>()),
-    );
-    gh.lazySingleton<_i607.CatalogRemoteDataSource>(
-      () => _i607.CatalogRemoteDataSourceImpl(dio: gh<_i361.Dio>()),
     );
     gh.lazySingleton<_i518.HomeRepository>(
       () => _i1055.HomeRepositoryImpl(

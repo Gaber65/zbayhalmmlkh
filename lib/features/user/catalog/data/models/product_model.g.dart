@@ -71,6 +71,8 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'is_offer': instance.isOffer,
       'is_best_seller': instance.isBestSeller,
       'is_available': instance.isAvailable,
+      'is_carcass': instance.isCarcass,
+      'portions': instance.portions,
       'stock_quantity': instance.stockQuantity,
       'loyalty_points': instance.loyaltyPoints,
       'cutting_options': instance.cuttingOptions,
@@ -94,7 +96,5 @@ Map<String, dynamic> _$ProductModelToJson(ProductModel instance) =>
       'images': instance.images,
       'has_sizes': instance.hasSizes,
       'sizes': instance.sizes,
-      'is_carcass': instance.isCarcass,
-      'portions': instance.portions,
       'calories': instance.calories,
     };

@@ -1,5 +1,7 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:dhabayih_lmamlaka/core/error/failure.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/catalog_repository.dart';
@@ -12,12 +14,20 @@ class CatalogCubit extends Cubit<CatalogState> {
   CatalogCubit({required this.repository}) : super(CatalogInitial());
 
   Future<void> fetchCatalog() async {
-    emit(CatalogLoading());
+    if (!isClosed) emit(CatalogLoading());
 
-    final categoriesResult = await repository.getCategories();
-    final productsResult = await repository.getProducts();
-    final offersResult = await repository.getOffers();
-    final bestSellersResult = await repository.getBestSellers();
+    // Parallelize network requests to eliminate waterfall latency
+    final results = await Future.wait([
+      repository.getCategories(),
+      repository.getProducts(),
+      repository.getOffers(),
+      repository.getBestSellers(),
+    ]);
+
+    final categoriesResult = results[0] as Either<Failure, List<Category>>;
+    final productsResult = results[1] as Either<Failure, List<Product>>;
+    final offersResult = results[2] as Either<Failure, List<Product>>;
+    final bestSellersResult = results[3] as Either<Failure, List<Product>>;
 
     String? errorMsg;
     final categories = categoriesResult.fold<List<Category>>(
