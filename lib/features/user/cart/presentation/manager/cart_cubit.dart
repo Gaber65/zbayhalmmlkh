@@ -10,11 +10,11 @@ class CartCubit extends Cubit<CartState> {
   CartCubit({required this.repository}) : super(CartInitial());
 
   Future<void> fetchCart() async {
-    emit(CartLoading());
+    if (!isClosed) emit(CartLoading());
     final result = await repository.getCart();
     result.fold(
-      (failure) => emit(CartError(failure.error.message)),
-      (cart) => emit(CartLoaded(cart)),
+      (failure) => if (!isClosed) emit(CartError(failure.error.message)),
+      (cart) => if (!isClosed) emit(CartLoaded(cart)),
     );
   }
 
@@ -27,7 +27,7 @@ class CartCubit extends Cubit<CartState> {
     String? notes,
     int? sizeId,
   }) async {
-    emit(CartItemAdding());
+    if (!isClosed) emit(CartItemAdding());
     final result = await repository.addToCart(
       productId: productId,
       quantity: quantity,
@@ -38,8 +38,8 @@ class CartCubit extends Cubit<CartState> {
       sizeId: sizeId,
     );
     result.fold(
-      (failure) => emit(CartItemAddError(failure.error.message)),
-      (cart) => emit(CartItemAdded(cart)),
+      (failure) => if (!isClosed) emit(CartItemAddError(failure.error.message)),
+      (cart) => if (!isClosed) emit(CartItemAdded(cart)),
     );
   }
 
@@ -51,7 +51,7 @@ class CartCubit extends Cubit<CartState> {
     List<int>? excludedPartIds,
     String? notes,
   }) async {
-    emit(CartLoading());
+    if (!isClosed) emit(CartLoading());
     final result = await repository.updateCartItem(
       productId: productId,
       quantity: quantity,
@@ -61,26 +61,26 @@ class CartCubit extends Cubit<CartState> {
       notes: notes,
     );
     result.fold(
-      (failure) => emit(CartError(failure.error.message)),
-      (cart) => emit(CartLoaded(cart)),
+      (failure) => if (!isClosed) emit(CartError(failure.error.message)),
+      (cart) => if (!isClosed) emit(CartLoaded(cart)),
     );
   }
 
   Future<void> removeFromCart({required int productId}) async {
-    emit(CartLoading());
+    if (!isClosed) emit(CartLoading());
     final result = await repository.removeFromCart(productId: productId);
     result.fold(
-      (failure) => emit(CartError(failure.error.message)),
-      (cart) => emit(CartLoaded(cart)),
+      (failure) => if (!isClosed) emit(CartError(failure.error.message)),
+      (cart) => if (!isClosed) emit(CartLoaded(cart)),
     );
   }
 
   Future<void> clearCart() async {
-    emit(CartLoading());
+    if (!isClosed) emit(CartLoading());
     final result = await repository.clearCart();
     result.fold(
-      (failure) => emit(CartError(failure.error.message)),
-      (cart) => emit(CartLoaded(cart)),
+      (failure) => if (!isClosed) emit(CartError(failure.error.message)),
+      (cart) => if (!isClosed) emit(CartLoaded(cart)),
     );
   }
 }

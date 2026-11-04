@@ -35,11 +35,11 @@ class AdminDashboardCubit extends Cubit<AdminDashboardState> {
   AdminDashboardCubit({required this.repository}) : super(AdminDashboardInitial());
 
   Future<void> loadStats() async {
-    emit(AdminDashboardLoading());
+    if (!isClosed) emit(AdminDashboardLoading());
     final result = await repository.getDashboardStats();
     result.fold(
-      (failure) => emit(AdminDashboardError(message: failure.error.message)),
-      (stats) => emit(AdminDashboardLoaded(stats: stats)),
+      (failure) => if (!isClosed) emit(AdminDashboardError(message: failure.error.message)),
+      (stats) => if (!isClosed) emit(AdminDashboardLoaded(stats: stats)),
     );
   }
 }

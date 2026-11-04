@@ -1,10 +1,10 @@
-import 'package:google_fonts/google_fonts.dart';
 /// Entry point for the Dhabayih Lmamlaka Flutter application.
 ///
 /// This file initializes core application services including system configuration,
 /// Firebase initialization, dependency injection, push notifications, state management,
 /// and sets up the root widget tree with localizations and routing.
 library;
+import 'package:google_fonts/google_fonts.dart';
 
 import 'dart:io';
 import 'dart:ui';

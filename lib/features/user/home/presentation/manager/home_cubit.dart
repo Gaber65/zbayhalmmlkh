@@ -12,11 +12,11 @@ class HomeCubit extends Cubit<HomeState> {
   HomeCubit({required this.getHomeData}) : super(HomeInitial());
 
   Future<void> fetchHomeData() async {
-    emit(HomeLoading());
+    if (!isClosed) emit(HomeLoading());
     final result = await getHomeData(NoParams());
     result.fold(
-      (failure) => emit(HomeError(message: failure.error.message)),
-      (data) => emit(HomeLoaded(homeData: data)),
+      (failure) => if (!isClosed) emit(HomeError(message: failure.error.message)),
+      (data) => if (!isClosed) emit(HomeLoaded(homeData: data)),
     );
   }
 }
