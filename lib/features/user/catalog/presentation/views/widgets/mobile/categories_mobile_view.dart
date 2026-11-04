@@ -1,3 +1,4 @@
+import 'package:dhabayih_lmamlaka/core/widgets/skeleton_loading.dart';
 import 'package:dhabayih_lmamlaka/core/di/injection.dart';
 import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/features/shared/auth/presentation/manager/auth_cubit.dart';
@@ -453,8 +454,43 @@ class _CategoriesMobileViewState extends State<CategoriesMobileView> {
     if ((state is CatalogLoading || state is CatalogInitial) &&
         categories.isEmpty &&
         filteredProducts.isEmpty) {
-      return Center(
-        child: CircularProgressIndicator(color: palette.red),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 10),
+            // Categories Chips Skeleton
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              child: Row(
+                children: List.generate(
+                  5,
+                  (_) => const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4.0),
+                    child: CategoryChipSkeleton(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Products Grid Skeleton
+            Expanded(
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.72,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: 6,
+                itemBuilder: (context, index) => const ProductCardSkeleton(),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -621,9 +657,18 @@ class _CategoriesMobileViewState extends State<CategoriesMobileView> {
 
             if (_loadingCategoryProducts)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Center(
-                  child: CircularProgressIndicator(color: palette.red),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.72,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: 4,
+                  itemBuilder: (context, index) => const ProductCardSkeleton(),
                 ),
               ),
 

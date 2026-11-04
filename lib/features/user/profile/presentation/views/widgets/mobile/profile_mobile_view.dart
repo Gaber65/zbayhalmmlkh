@@ -1,3 +1,4 @@
+import 'package:dhabayih_lmamlaka/core/widgets/skeleton_loading.dart';
 import 'package:dhabayih_lmamlaka/features/user/profile/domain/entities/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,7 +44,7 @@ class ProfileMobileView extends StatelessWidget {
     }
 
     if (state is ProfileLoading || state is ProfileInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return _buildSkeleton(context);
     } else if (state is ProfileError) {
       return _buildErrorBody(context, (state as ProfileError).message);
     } else if (state is ProfileLoaded) {
@@ -583,6 +584,58 @@ class ProfileMobileView extends StatelessWidget {
             size: 14,
             color: colorScheme.onSurfaceVariant,
           ),
+    );
+  }
+
+  Widget _buildSkeleton(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Column(
+        children: [
+          // Avatar Skeleton
+          const Center(
+            child: SkeletonBox(
+              width: 90,
+              height: 90,
+              borderRadius: 45,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // User Name & Phone Skeleton
+          const SkeletonBox(
+            width: 160,
+            height: 20,
+            borderRadius: 8,
+          ),
+          const SizedBox(height: 8),
+          const SkeletonBox(
+            width: 110,
+            height: 14,
+            borderRadius: 6,
+          ),
+          const SizedBox(height: 24),
+          // Loyalty & Wallet Card Skeleton
+          const SkeletonBox(
+            width: double.infinity,
+            height: 80,
+            borderRadius: 16,
+          ),
+          const SizedBox(height: 24),
+          // Settings Menu List Skeletons
+          ...List.generate(
+            4,
+            (_) => const Padding(
+              padding: EdgeInsets.only(bottom: 12.0),
+              child: SkeletonBox(
+                width: double.infinity,
+                height: 56,
+                borderRadius: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
