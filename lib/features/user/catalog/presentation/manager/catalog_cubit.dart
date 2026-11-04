@@ -12,7 +12,7 @@ class CatalogCubit extends Cubit<CatalogState> {
   CatalogCubit({required this.repository}) : super(CatalogInitial());
 
   Future<void> fetchCatalog() async {
-    if (!isClosed) emit(CatalogLoading());
+    emit(CatalogLoading());
 
     final categoriesResult = await repository.getCategories();
     final productsResult = await repository.getProducts();
@@ -44,11 +44,11 @@ class CatalogCubit extends Cubit<CatalogState> {
     );
 
     if (categories.isEmpty && products.isEmpty && errorMsg != null) {
-      if (!isClosed) emit(CatalogError(errorMsg!));
+      emit(CatalogError(errorMsg!));
       return;
     }
 
-    if (!isClosed) emit(CatalogLoaded(
+    emit(CatalogLoaded(
       categories: categories,
       products: products,
       offers: offers,
@@ -57,35 +57,35 @@ class CatalogCubit extends Cubit<CatalogState> {
   }
 
   Future<void> fetchProductsByCategory(int categoryId) async {
-    if (!isClosed) emit(ProductsByCategoryLoading());
+    emit(ProductsByCategoryLoading());
 
     final result = await repository.getProductsByCategory(categoryId);
 
     result.fold(
-      (failure) => if (!isClosed) emit(CatalogError(failure.error.message)),
-      (products) => if (!isClosed) emit(ProductsByCategoryLoaded(products: products)),
+      (failure) => emit(CatalogError(failure.error.message)),
+      (products) => emit(ProductsByCategoryLoaded(products: products)),
     );
   }
 
   Future<void> fetchCategories() async {
-    if (!isClosed) emit(CatalogLoading());
+    emit(CatalogLoading());
 
     final result = await repository.getCategories();
 
     result.fold(
-      (failure) => if (!isClosed) emit(CatalogError(failure.error.message)),
-      (categories) => if (!isClosed) emit(CategoriesLoaded(categories: categories)),
+      (failure) => emit(CatalogError(failure.error.message)),
+      (categories) => emit(CategoriesLoaded(categories: categories)),
     );
   }
 
   Future<void> fetchProductById(int productId) async {
-    if (!isClosed) emit(ProductDetailLoading());
+    emit(ProductDetailLoading());
 
     final result = await repository.getProductById(productId);
 
     result.fold(
-      (failure) => if (!isClosed) emit(ProductDetailError(failure.error.message)),
-      (product) => if (!isClosed) emit(ProductDetailLoaded(product: product)),
+      (failure) => emit(ProductDetailError(failure.error.message)),
+      (product) => emit(ProductDetailLoaded(product: product)),
     );
   }
 }
