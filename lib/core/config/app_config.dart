@@ -9,7 +9,7 @@ class AppConfig {
   static const String buildNumber = '1';
 
   // Environment
-  static const bool isProduction = false;
+  static const bool isProduction = true;
   static const bool enableLogging = true;
 
   // Local Server Configuration
