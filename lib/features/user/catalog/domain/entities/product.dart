@@ -202,6 +202,8 @@ class Product extends Equatable {
   final bool hasSizes;
   final List<ProductSize> sizes;
   final bool isCarcass;
+  final bool isShalwata;
+  final double? shalwataPrice;
   final List<ProductPortion> portions;
   final List<ProductOption> cuttingOptions;
   final List<ProductOption> packagingOptions;
@@ -236,6 +238,8 @@ class Product extends Equatable {
     this.isAvailable = true,
     this.active = true,
     this.isCarcass = false,
+    this.isShalwata = false,
+    this.shalwataPrice,
     this.portions = const [],
     this.stockQuantity,
     this.minimumStock,
@@ -390,6 +394,8 @@ class Product extends Equatable {
         loyaltyPoints,
         sizes,
         isCarcass,
+        isShalwata,
+        shalwataPrice,
         portions,
         cuttingOptions,
         packagingOptions,

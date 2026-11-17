@@ -60,6 +60,12 @@ class ProductModel extends Equatable {
   @JsonKey(name: 'is_carcass', defaultValue: false)
   final bool isCarcass;
 
+  @JsonKey(name: 'is_shalwata', defaultValue: false)
+  final bool isShalwata;
+
+  @JsonKey(name: 'shalwata_price')
+  final double? shalwataPrice;
+
   @JsonKey(name: 'portions')
   final List<dynamic>? portions;
 
@@ -180,6 +186,8 @@ class ProductModel extends Equatable {
     this.hasSizes = false,
     this.sizes,
     this.isCarcass = false,
+    this.isShalwata = false,
+    this.shalwataPrice,
     this.portions,
     this.calories,
     this.sequence = 10,

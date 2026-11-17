@@ -5,8 +5,8 @@ class AppConfig {
   AppConfig._();
 
   static const String appName = 'ذبائح المملكة';
-  static const String appVersion = '1.0.0';
-  static const String buildNumber = '1';
+  static const String appVersion = '1.0.1';
+  static const String buildNumber = '2';
 
   // Environment
   static const bool isProduction = true;
@@ -22,11 +22,7 @@ class AppConfig {
       return 'https://api.zbayhalmmlkh.network';
     }
 
-    if (kIsWeb) {
-      return 'http://localhost:$localPort';
-    }
-
-    // 192.168.1.4 connects directly from both Android Emulator & Physical Phone
-    return 'http://$localIp:$localPort';
+    // Connects directly via adb reverse or localhost on Windows / Web / Emulator
+    return 'http://127.0.0.1:$localPort';
   }
 }
