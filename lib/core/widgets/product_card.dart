@@ -1,35 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dhabayih_lmamlaka/core/theme/app_icons.dart';
+import '../../features/user/favorites/presentation/manager/favorites_cubit.dart';
+import '../../features/user/favorites/presentation/manager/favorites_state.dart';
 import 'price_widget.dart';
 
 class ProductCard extends StatelessWidget {
+  final int? id;
+  final dynamic product;
   final String imageUrl;
   final String title;
   final String subtitle;
   final double price;
   final double? originalPrice;
   final String? tag;
+  final String? weight;
   final VoidCallback onAddToCart;
   final VoidCallback onTap;
+  final bool? isFavorite;
+  final VoidCallback? onFavoriteToggle;
 
   const ProductCard({
     super.key,
+    this.id,
+    this.product,
     required this.imageUrl,
     required this.title,
     required this.subtitle,
     required this.price,
     this.originalPrice,
     this.tag,
+    this.weight,
     required this.onAddToCart,
     required this.onTap,
+    this.isFavorite,
+    this.onFavoriteToggle,
   });
+
+  String? get _effectiveWeight {
+    if (weight != null && weight!.isNotEmpty) return weight;
+    if (product != null) {
+      try {
+        final wKg = product.weightKg;
+        if (wKg != null && wKg > 0) {
+          return '${wKg.toStringAsFixed(wKg % 1 == 0 ? 0 : 1)} كجم';
+        }
+      } catch (_) {}
+    }
+    if (subtitle.contains('كيلو') || subtitle.contains('كجم') || subtitle.contains('جرام')) {
+      return subtitle;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final hasDiscount = originalPrice != null && originalPrice! > price;
+
+    final effectiveId = id ?? (product != null ? (product is int ? product : (product.id ?? (product is Map ? product['id'] : null))) : null);
+    bool effectiveIsFav = isFavorite ?? false;
+    if (isFavorite == null && effectiveId != null) {
+      try {
+        final favState = context.watch<FavoritesCubit>().state;
+        if (favState is FavoritesLoaded) {
+          effectiveIsFav = favState.favoriteIds.contains(effectiveId);
+        }
+      } catch (_) {}
+    }
 
     return Material(
       color: Colors.transparent,
@@ -95,33 +134,36 @@ class ProductCard extends StatelessWidget {
                               ),
                       ),
                     ),
-                    // "Open Now" or Discount Tag
-                    PositionedDirectional(
-                      top: 8,
-                      end: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: colorScheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                    // Weight or Discount Tag
+                    if (tag != null || _effectiveWeight != null || hasDiscount)
+                      PositionedDirectional(
+                        top: 8,
+                        end: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: hasDiscount
+                                ? colorScheme.primary
+                                : Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            tag ?? (hasDiscount ? '-${(((originalPrice! - price) / originalPrice!) * 100).round()}%' : _effectiveWeight!),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          tag ?? (hasDiscount ? '-${(((originalPrice! - price) / originalPrice!) * 100).round()}%' : 'Open now'),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
                           ),
                         ),
                       ),
-                    ),
                     // Wishlist Button Top Left
                     PositionedDirectional(
                       top: 8,
@@ -129,18 +171,46 @@ class ProductCard extends StatelessWidget {
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {},
+                          onTap: () {
+                            if (onFavoriteToggle != null) {
+                              onFavoriteToggle!();
+                            } else if (effectiveId != null || product != null) {
+                              try {
+                                context.read<FavoritesCubit>().toggleFavorite(
+                                  product: product ?? effectiveId,
+                                  title: title,
+                                  price: price,
+                                  imageUrl: imageUrl,
+                                  subtitle: subtitle,
+                                );
+                              } catch (_) {}
+                            }
+                          },
                           customBorder: const CircleBorder(),
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.35),
+                              color: effectiveIsFav
+                                  ? Colors.white
+                                  : Colors.black.withValues(alpha: 0.35),
                               shape: BoxShape.circle,
+                              boxShadow: effectiveIsFav
+                                  ? [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.18),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
                             ),
-                            child: const Icon(
-                              Icons.favorite_border_rounded,
-                              size: 14,
-                              color: Colors.white,
+                            child: Icon(
+                              effectiveIsFav
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 15,
+                              color: effectiveIsFav ? Colors.redAccent : Colors.white,
                             ),
                           ),
                         ),
@@ -191,31 +261,20 @@ class ProductCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 3),
-              // Subtitle & Location
-              Row(
-                children: [
-                  Icon(
-                    AppIcons.location,
-                    size: 12,
+              if (subtitle.isNotEmpty) ...[
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
+                    fontSize: 11,
                   ),
-                  const SizedBox(width: 3),
-                  Expanded(
-                    child: Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 11,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
               const SizedBox(height: 10),
-              // Price & Action Button
+              // Price & Quick Add Button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -236,19 +295,19 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                   Material(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(12),
                     child: InkWell(
                       onTap: onAddToCart,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        width: 38,
-                        height: 38,
+                        width: 36,
+                        height: 36,
                         alignment: Alignment.center,
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          color: colorScheme.primary,
-                          size: 18,
+                        child: const Icon(
+                          Icons.add_rounded,
+                          color: Colors.white,
+                          size: 22,
                         ),
                       ),
                     ),

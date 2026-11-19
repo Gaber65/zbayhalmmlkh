@@ -37,6 +37,8 @@ class OrderRepositoryImpl implements OrderRepository {
     String? notes,
     String? couponCode,
     bool? redeemPoints,
+    String? slaughterDate,
+    String? slaughterTime,
   }) async {
     try {
       final model = await remoteDataSource.checkout(
@@ -47,6 +49,8 @@ class OrderRepositoryImpl implements OrderRepository {
         notes: notes,
         couponCode: couponCode,
         redeemPoints: redeemPoints,
+        slaughterDate: slaughterDate,
+        slaughterTime: slaughterTime,
       );
       return Right(model.toDomain());
     } on ServerException catch (e) {

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.11.0
@@ -69,7 +69,7 @@ dependencies:
   firebase_messaging: ^16.4.3
   flutter_local_notifications: ^22.1.0
   json_annotation: ^4.12.0
-  iconly: ^1.0.1
+  flutter_iconly_plus: ^1.0.1
   google_maps_flutter: ^2.10.0
   geocoding: ^3.0.0
   geolocator: ^13.0.2
@@ -100,6 +100,23 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/home/
+    - assets/sounds/
+    - assets/audio/
+    - shorebird.yaml
+
+  # IBM Plex Sans Arabic, extracted from design_reference/index.html.
+  fonts:
+    - family: IBMPlexSansArabic
+      fonts:
+        - asset: assets/fonts/Plex-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Plex-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Plex-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Plex-Bold.ttf
+          weight: 700
 
 
 flutter_intl:

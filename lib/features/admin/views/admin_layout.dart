@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/di/injection.dart';
+import '../../../core/routes/routes.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/theme/colors.dart';
 import '../core/admin_i18n.dart';
@@ -27,7 +29,7 @@ import '../presentation/manager/admin_branches_cubit.dart';
 import '../presentation/views/admin_branches_view.dart';
 import '../presentation/widgets/admin_drawer.dart';
 import '../presentation/widgets/admin_notifications_sheet.dart';
-import 'package:iconly/iconly.dart';
+import 'package:flutter_iconly_plus/flutter_iconly_plus.dart';
 
 class AdminLayout extends StatefulWidget {
   const AdminLayout({super.key});
@@ -148,7 +150,7 @@ class _AdminLayoutState extends State<AdminLayout> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<AdminDashboardCubit>()..loadStats()),
-        BlocProvider(create: (_) => getIt<AdminOrdersCubit>()),
+        BlocProvider(create: (_) => getIt<AdminOrdersCubit>()..loadOrders()),
         BlocProvider(create: (_) => getIt<AdminProductsCubit>()),
         BlocProvider(create: (_) => getIt<AdminCategoriesCubit>()),
         BlocProvider(create: (_) => getIt<AdminOptionsCubit>()),
@@ -190,7 +192,7 @@ class _AdminLayoutState extends State<AdminLayout> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
-                  child: Image.asset('assets/images/app_logo.png', fit: BoxFit.contain),
+                  child: Image.asset('assets/images/app_logo.webp', fit: BoxFit.contain),
                 ),
               ),
               const SizedBox(width: 10),
@@ -236,6 +238,19 @@ class _AdminLayoutState extends State<AdminLayout> {
                 onOpenOrderDetail: _openOrderDetail,
                 onNavigateTab: _onTabSelected,
               ),
+            ),
+            // ── Quick Return to Client Store ──────────────────────────────
+            IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white10 : AppColors.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.storefront_rounded, size: 18, color: AppColors.primary),
+              ),
+              tooltip: i18n.backToStore,
+              onPressed: () => context.go(Routes.home),
             ),
             const SizedBox(width: 8),
           ],

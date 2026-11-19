@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/colors.dart';
+import '../../core/admin_i18n.dart';
 import '../manager/admin_settings_cubit.dart';
 
 class AdminSettingsView extends StatelessWidget {
@@ -63,12 +64,13 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final i18n = AdminI18n.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'إعدادات النظام وبرنامج الولاء',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          i18n.settingsTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -145,22 +147,22 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'إعدادات النظام وبرنامج الولاء',
-                              style: TextStyle(
+                              i18n.settingsTitle,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
-                              'تحكم في قواعد اكتساب واستبدال النقاط وحوافز العملاء والتواصل',
-                              style: TextStyle(
+                              i18n.settingsSubtitle,
+                              style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 12,
                               ),
@@ -193,9 +195,9 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'قواعد النقاط والاستبدال',
-                        style: TextStyle(
+                      Text(
+                        i18n.loyaltyRulesTitle,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,
@@ -204,13 +206,13 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                       const SizedBox(height: 16),
 
                       // Earning Rate
-                      const Text(
-                        'معدل الاكتساب (Earning Rate)',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      Text(
+                        i18n.earningRateTitle,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'المعادلة: النقاط المكتسبة = إجمالي الطلب (ر.س) * معدل الاكتساب',
+                        i18n.earningRateFormula,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -222,7 +224,7 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
                           hintText: '1.00',
-                          suffixText: 'نقطة / 1 ر.س',
+                          suffixText: i18n.isArabic ? 'نقطة / 1 ر.س' : 'pts / 1 SAR',
                           filled: true,
                           fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -233,13 +235,13 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                       const SizedBox(height: 20),
 
                       // Redemption Rate
-                      const Text(
-                        'معدل الاستبدال (Redemption Rate)',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      Text(
+                        i18n.redemptionRateTitle,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'المعادلة: الخصم (ر.س) = النقاط / معدل الاستبدال (مثال: 100 نقطة = 1 ر.س)',
+                        i18n.redemptionRateFormula,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -251,7 +253,7 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         decoration: InputDecoration(
                           hintText: '100.00',
-                          suffixText: 'نقطة = 1 ر.س',
+                          suffixText: i18n.isArabic ? 'نقطة = 1 ر.س' : 'pts = 1 SAR',
                           filled: true,
                           fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -262,13 +264,15 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                       const SizedBox(height: 20),
 
                       // Min Redemption Points
-                      const Text(
-                        'الحد الأدنى للاستبدال (Min Redeem Points)',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      Text(
+                        i18n.minRedeemTitle,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'الحد الأدنى لرصيد نقاط الولاء المطلوب قبل أن يتمكن العميل من الاستبدال',
+                        i18n.isArabic
+                            ? 'الحد الأدنى لرصيد نقاط الولاء المطلوب قبل أن يتمكن العميل من الاستبدال'
+                            : 'Minimum loyalty points balance required before a customer can redeem',
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -280,7 +284,7 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: '500',
-                          suffixText: 'نقطة',
+                          suffixText: i18n.isArabic ? 'نقطة' : 'pts',
                           filled: true,
                           fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -324,14 +328,14 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Row(
+                              : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.save_outlined),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.save_outlined),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'حفظ إعدادات الولاء في أودو',
-                                      style: TextStyle(
+                                      i18n.isArabic ? 'حفظ إعدادات الولاء في أودو' : 'Save Loyalty Settings in Odoo',
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -380,22 +384,24 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'إعدادات التواصل والدعم الفني',
-                                  style: TextStyle(
+                                  i18n.contactSettingsTitle,
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF25D366),
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
-                                  'تخصيص رقم الواتساب والرسالة الافتراضية وهاتف الدعم الموحد',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                  i18n.isArabic
+                                      ? 'تخصيص رقم الواتساب والرسالة الافتراضية وهاتف الدعم الموحد'
+                                      : 'Customize WhatsApp number, default chat message and support phone',
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                                 ),
                               ],
                             ),
@@ -407,13 +413,15 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                       // WhatsApp Enable Switch
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text(
-                          'تفعيل التواصل عبر واتساب',
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        title: Text(
+                          i18n.enableWhatsappSupport,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                         ),
-                        subtitle: const Text(
-                          'ظهور زر الواتساب العائم في المتجر وتطبيق العميل',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        subtitle: Text(
+                          i18n.isArabic
+                              ? 'ظهور زر الواتساب العائم في المتجر وتطبيق العميل'
+                              : 'Show floating WhatsApp button in customer storefront',
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         value: _whatsappEnabled,
                         activeThumbColor: const Color(0xFF25D366),
@@ -422,9 +430,9 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                       const SizedBox(height: 12),
 
                       // WhatsApp Number
-                      const Text(
-                        'رقم الواتساب الرسمي (مع المفتاح الدولي)',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      Text(
+                        i18n.whatsappNumberTitle,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const SizedBox(height: 6),
                       TextField(
@@ -443,16 +451,18 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                       const SizedBox(height: 16),
 
                       // Default WhatsApp Message
-                      const Text(
-                        'الرسالة الافتراضية لبدء المحادثة',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      Text(
+                        i18n.defaultWhatsappMsg,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const SizedBox(height: 6),
                       TextField(
                         controller: _whatsappMessageController,
                         maxLines: 2,
                         decoration: InputDecoration(
-                          hintText: 'مرحباً، أود الاستفسار عن ذبائح المملكة',
+                          hintText: i18n.isArabic
+                              ? 'مرحباً، أود الاستفسار عن ذبائح المملكة'
+                              : 'Hello, I have an inquiry about Dhabayih Al-Mamlaka',
                           prefixIcon: const Icon(Icons.message_outlined, color: Colors.grey),
                           filled: true,
                           fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade50,
@@ -464,9 +474,9 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                       const SizedBox(height: 16),
 
                       // Customer Support Phone
-                      const Text(
-                        'هاتف الدعم الموحد (Customer Support Phone)',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      Text(
+                        i18n.phoneSupportTitle,
+                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       const SizedBox(height: 6),
                       TextField(
@@ -515,14 +525,14 @@ class _AdminSettingsContentState extends State<_AdminSettingsContent> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Row(
+                              : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.check_circle_outline),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.check_circle_outline),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'حفظ إعدادات التواصل والدعم',
-                                      style: TextStyle(
+                                      i18n.isArabic ? 'حفظ إعدادات التواصل والدعم' : 'Save Support & Contact Settings',
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),

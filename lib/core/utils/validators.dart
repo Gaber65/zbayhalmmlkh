@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 /// Form Validators
 /// Provides validation functions for common form fields
 class Validators {
@@ -224,5 +226,89 @@ class Validators {
       }
       return null;
     };
+  }
+
+  /// Normalizes Arabic & Persian digits to Western digits (0-9)
+  static String normalizeDigits(String input) {
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    String result = input;
+    for (int i = 0; i < 10; i++) {
+      result = result.replaceAll(arabic[i], '$i');
+      result = result.replaceAll(persian[i], '$i');
+    }
+    return result;
+  }
+
+  /// Normalizes any Saudi mobile number format to +9665XXXXXXXX
+  /// Accepts: 05XXXXXXXX, 5XXXXXXXX, +9665XXXXXXXX, 009665XXXXXXXX, 9665XXXXXXXX
+  static String? normalizeSaudiPhone(String? phone) {
+    if (phone == null || phone.trim().isEmpty) return null;
+    String cleaned = normalizeDigits(phone).replaceAll(RegExp(r'[\s\-\(\)\.]+'), '');
+    if (cleaned.startsWith('00966')) {
+      cleaned = '+${cleaned.substring(2)}';
+    } else if (cleaned.startsWith('966')) {
+      cleaned = '+$cleaned';
+    } else if (cleaned.startsWith('05') && cleaned.length == 10) {
+      cleaned = '+966${cleaned.substring(1)}';
+    } else if (cleaned.startsWith('5') && cleaned.length == 9) {
+      cleaned = '+966$cleaned';
+    } else if (!cleaned.startsWith('+')) {
+      cleaned = '+$cleaned';
+    }
+    return cleaned;
+  }
+
+  /// Strictly validates Saudi mobile phone format (+9665XXXXXXXX)
+  static bool isValidSaudiPhone(String? phone) {
+    final normalized = normalizeSaudiPhone(phone);
+    if (normalized == null) return false;
+    return RegExp(r'^\+9665\d{8}$').hasMatch(normalized);
+  }
+}
+
+/// Input Formatter for Saudi Mobile Numbers
+/// - Converts Eastern Arabic & Persian digits (٠-٩) to English (0-9)
+/// - Strips any pasted country codes (+966, 00966, 966)
+/// - Enforces maximum length: 10 digits for numbers starting with 0 (05XXXXXXXX)
+///   or 9 digits for numbers starting with 5 (5XXXXXXXX)
+class SaudiPhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    // 1. Normalize Eastern Arabic & Persian digits
+    String normalized = Validators.normalizeDigits(newValue.text);
+
+    // 2. Strip non-digits and non-plus
+    String cleaned = normalized.replaceAll(RegExp(r'[^\d+]'), '');
+
+    // 3. Handle pasted international prefixes
+    if (cleaned.startsWith('+966')) {
+      cleaned = cleaned.substring(4);
+    } else if (cleaned.startsWith('00966')) {
+      cleaned = cleaned.substring(5);
+    } else if (cleaned.startsWith('966')) {
+      cleaned = cleaned.substring(3);
+    }
+
+    // Strip any remaining non-digits
+    cleaned = cleaned.replaceAll(RegExp(r'\D'), '');
+
+    // 4. Enforce strict max length (05XXXXXXXX -> 10, 5XXXXXXXX -> 9)
+    final int maxLength = cleaned.startsWith('0') ? 10 : 9;
+    if (cleaned.length > maxLength) {
+      cleaned = cleaned.substring(0, maxLength);
+    }
+
+    return TextEditingValue(
+      text: cleaned,
+      selection: TextSelection.collapsed(offset: cleaned.length),
+    );
   }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dhabayih_lmamlaka/generated/l10n.dart';
 import 'package:dhabayih_lmamlaka/core/app_cubit/app_cubit.dart';
 import 'package:dhabayih_lmamlaka/core/app_cubit/app_state.dart';
 import 'package:dhabayih_lmamlaka/core/di/injection.dart';
+import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/widgets/responsive_layout.dart';
 import 'package:dhabayih_lmamlaka/features/shared/auth/presentation/manager/auth_cubit.dart';
 import 'package:dhabayih_lmamlaka/features/shared/auth/presentation/manager/auth_state.dart';
@@ -21,7 +23,6 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
@@ -66,11 +67,21 @@ class ProfileScreen extends StatelessWidget {
                 if (profileLang.isNotEmpty && profileLang != currentLang) {
                   appCubit.changeLanguage(profileLang);
                 }
+              } else if (state is ProfileAccountDeleted) {
+                context.read<AuthCubit>().logout();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(S.of(context).delete_account_success),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                context.go(Routes.login);
               }
             },
             child: BlocBuilder<AppCubit, AppState>(
               builder: (context, appState) {
                 final isDark = appState.themeMode == ThemeMode.dark;
+                final isAr = appState.locale.languageCode == 'ar';
 
                 return Scaffold(
                   backgroundColor: colorScheme.surface,

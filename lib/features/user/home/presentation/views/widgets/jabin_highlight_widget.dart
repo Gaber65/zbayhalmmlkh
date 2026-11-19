@@ -385,7 +385,9 @@ class FullStoryViewerModalState extends State<FullStoryViewerModal>
 
                   final isVideo =
                       currentHighlight.mediaType.toLowerCase() == 'video' ||
-                      currentHighlight.mediaUrl.toLowerCase().contains('/video') ||
+                      currentHighlight.mediaUrl.toLowerCase().contains(
+                        '/video',
+                      ) ||
                       currentHighlight.mediaUrl.toLowerCase().endsWith('.mp4');
 
                   return Stack(
@@ -402,7 +404,9 @@ class FullStoryViewerModalState extends State<FullStoryViewerModal>
                           imageUrl: currentHighlight.mediaUrl,
                           fit: BoxFit.contain,
                           placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(color: Colors.white),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
                           ),
                           errorWidget: (context, url, error) => Center(
                             child: Column(
@@ -643,20 +647,22 @@ class _StoryVideoPlayerState extends State<_StoryVideoPlayer> {
 
   void _initVideo() {
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
+      ..initialize()
+          .then((_) {
+            if (mounted) {
+              setState(() {
+                _isInitialized = true;
+              });
+              _controller?.play();
+            }
+          })
+          .catchError((error) {
+            if (mounted) {
+              setState(() {
+                _hasError = true;
+              });
+            }
           });
-          _controller?.play();
-        }
-      }).catchError((error) {
-        if (mounted) {
-          setState(() {
-            _hasError = true;
-          });
-        }
-      });
 
     _controller?.addListener(_videoListener);
   }
@@ -684,7 +690,11 @@ class _StoryVideoPlayerState extends State<_StoryVideoPlayer> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.video_camera_back_rounded, color: Colors.white54, size: 50),
+            const Icon(
+              Icons.video_camera_back_rounded,
+              color: Colors.white54,
+              size: 50,
+            ),
             const SizedBox(height: 12),
             Text(
               S.of(context).unable_play_video,
@@ -709,4 +719,3 @@ class _StoryVideoPlayerState extends State<_StoryVideoPlayer> {
     );
   }
 }
-

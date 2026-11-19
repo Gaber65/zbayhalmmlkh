@@ -1,0 +1,42 @@
+{
+  "app_name": "ذبائح المملكة | لحوم طازجة",
+  "app_name_en": "Dhabayih Al-Mamlaka | Fresh Meat",
+  "bundle_id": "com.zbayhalmmlkh.app",
+  "version": "1.0.0",
+  "build_number": 1,
+  "ios": {
+    "title": "ذبائح المملكة | لحوم طازجة",
+    "subtitle": "أجود الذبائح واللحوم الطازجة",
+    "promotional_text": "منصة ذبائح المملكة لطلب أجود الذبائح واللحوم البلدية الطازجة والمذبوحة وفق الشريعة بمسالخ معتمدة مع التوصيل المبرد السريع لباب بيتك.",
+    "keywords": "ذبائح,لحوم,نعيمي,حري,نجدي,تيس,مفروم,توصيل,مسلخ,أضحية,عقيقة,ملحمة,خروف,مبرد,كشتة",
+    "primary_category": "Shopping",
+    "secondary_category": "Food & Drink",
+    "age_rating": "4+",
+    "icon": "store_assets/01_iOS_Assets/AppIcon_1024x1024.png",
+    "screenshots_dir": "store_assets/01_iOS_Assets/Screenshots_1290x2796"
+  },
+  "android": {
+    "title": "ذبائح المملكة | لحوم طازجة",
+    "short_description": "ذبائح ولحوم بلدية طازجة ومذبوحة وفق الشريعة مع توصيل مبرد وسريع لباب بيتك",
+    "category": "Shopping",
+    "icon": "store_assets/02_Android_Assets/AppIcon_512x512.png",
+    "feature_graphic": "store_assets/02_Android_Assets/FeatureGraphic_1024x500.png",
+    "screenshots_dir": "store_assets/02_Android_Assets/Screenshots_1080x1920"
+  },
+  "support": {
+    "email": "support@zbayhalmmlkh.network",
+    "alternative_email": "hello@dhabayih.com",
+    "phone": "+966500000000",
+    "website": "https://zbayhalmmlkh.network",
+    "privacy_policy_url": "https://zbayhalmmlkh.network/privacy-policy"
+  },
+  "review_account": {
+    "phone": "0500000000",
+    "full_phone": "+966500000000",
+    "otp": "123456",
+    "email": "reviewer@zbayhalmmlkh.network",
+    "password": "Dhabayih@2026",
+    "guest_mode_instructions": "Tap 'المتابعة كزائر' (Continue as Guest) on the login screen to access the entire app without credentials."
+  }
+}
+

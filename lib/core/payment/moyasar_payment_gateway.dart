@@ -23,13 +23,45 @@ class MoyasarPaymentGateway implements PaymentGateway {
   @override
   String get name => 'moyasar';
 
+  /// Validates that a Moyasar publishable key satisfies the SDK contract
+  /// (`pk_test_...` or `pk_live_...`, non-placeholder) before constructing
+  /// `PaymentConfig` so Dart `AssertionError` ("Condition Error") is never thrown.
+  static bool isValidPublishableKey(String? key) {
+    if (key == null) return false;
+    final trimmed = key.trim();
+    if (trimmed.length <= 12) return false;
+    final lower = trimmed.toLowerCase();
+    if (lower.contains('placeholder') || lower.contains('dummy')) {
+      return false;
+    }
+    return trimmed.startsWith('pk_test_') || trimmed.startsWith('pk_live_');
+  }
+
+  static int resolveAmountMinorUnits(PaymentRequest request) {
+    if (request.amountMinorUnits != null && request.amountMinorUnits! > 0) {
+      return request.amountMinorUnits!;
+    }
+    return (request.amount * 100).round();
+  }
+
   @override
   Future<PaymentResult> processPayment(
     BuildContext context,
     PaymentRequest request,
   ) async {
+    final amountHalalas = resolveAmountMinorUnits(request);
+    if (amountHalalas < 100 || request.amount <= 0) {
+      return const PaymentResult(
+        status: AppPaymentStatus.failed,
+        errorMessage: 'الحد الأدنى للدفع الإلكتروني عبر ميسر هو 1.00 ر.س',
+      );
+    }
+
     // 1. Fetch official Moyasar Invoice payment URL from backend
     String? url = request.paymentUrl;
+    String? effectivePublishableKey = request.publishableKey;
+    String? initiateErrorMessage;
+
     if (url == null || url.isEmpty) {
       try {
         final dio = getIt<Dio>();
@@ -42,18 +74,34 @@ class MoyasarPaymentGateway implements PaymentGateway {
         );
         if (response.statusCode == 200 || response.statusCode == 201) {
           final dynamic data = response.data['data'] ?? response.data;
-          url = data['payment_url'] as String?;
+          if (data is Map) {
+            url = data['payment_url'] as String?;
+            final respKey = data['publishable_key'] as String?;
+            if (isValidPublishableKey(respKey)) {
+              effectivePublishableKey = respKey!.trim();
+            }
+          }
         }
+      } on DioException catch (e) {
+        final respData = e.response?.data;
+        if (respData is Map && respData['message'] != null) {
+          initiateErrorMessage = respData['message'].toString();
+        }
+        debugPrint('Failed to initiate Moyasar payment invoice: $e');
       } catch (e) {
         debugPrint('Failed to initiate Moyasar payment invoice: $e');
       }
+    }
+
+    if (!context.mounted) {
+      return const PaymentResult(status: AppPaymentStatus.cancelled);
     }
 
     // 2. Web Platform handling: redirect to Moyasar Invoice payment page
     if (kIsWeb) {
       if (url != null && url.isNotEmpty) {
         await launchUrl(Uri.parse(url), webOnlyWindowName: '_self');
-        return PaymentResult(status: AppPaymentStatus.pending);
+        return const PaymentResult(status: AppPaymentStatus.pending);
       }
     }
 
@@ -69,23 +117,30 @@ class MoyasarPaymentGateway implements PaymentGateway {
         ),
       );
 
-      if (paymentId != null) {
-        return PaymentResult(status: AppPaymentStatus.paid, paymentId: paymentId);
+      if (paymentId != null && paymentId.isNotEmpty) {
+        return PaymentResult(
+          status: AppPaymentStatus.paid,
+          paymentId: paymentId,
+        );
       }
-      return PaymentResult(status: AppPaymentStatus.failed);
+      return const PaymentResult(status: AppPaymentStatus.failed);
     }
 
-    // 4. Fallback: native card screen if invoice URL is unavailable
+    // 4. Fallback: native card screen ONLY if a valid Moyasar publishable key is configured
+    if (!isValidPublishableKey(effectivePublishableKey)) {
+      return PaymentResult(
+        status: AppPaymentStatus.failed,
+        errorMessage: initiateErrorMessage ??
+            'بوابة الدفع الإلكتروني (ميسر) غير مهيأة بمفتاح صالح حالياً. يرجى اختيار الدفع عند الاستلام أو مراجعة إعدادات الدفع.',
+      );
+    }
+
     final paymentId = await Navigator.push<String?>(
       context,
       MaterialPageRoute(
         builder: (_) => NativePaymentScreen(
-          publishableKey: (request.publishableKey != null && request.publishableKey!.isNotEmpty)
-              ? request.publishableKey!
-              : 'pk_test_jmsPpaHEyAKUgFwNnLzhnzsCzbSPg11Lu7hN3Ex4',
-          amountMinorUnits: (request.amountMinorUnits != null && request.amountMinorUnits! > 0)
-              ? request.amountMinorUnits!
-              : (request.amount * 100).round(),
+          publishableKey: effectivePublishableKey!.trim(),
+          amountMinorUnits: amountHalalas,
           orderId: request.orderId,
           orderNumber: request.orderNumber,
           totalAmount: request.amount,
@@ -94,9 +149,9 @@ class MoyasarPaymentGateway implements PaymentGateway {
       ),
     );
 
-    if (paymentId != null) {
+    if (paymentId != null && paymentId.isNotEmpty) {
       return PaymentResult(status: AppPaymentStatus.paid, paymentId: paymentId);
     }
-    return PaymentResult(status: AppPaymentStatus.failed);
+    return const PaymentResult(status: AppPaymentStatus.failed);
   }
 }

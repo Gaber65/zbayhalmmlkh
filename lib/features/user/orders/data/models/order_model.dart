@@ -32,6 +32,8 @@ class OrderListItemModel {
   final String? customerPhone;
   final String? deliveryType;
   final double? deliveryFee;
+  final String? slaughterDate;
+  final String? slaughterTime;
 
   OrderListItemModel({
     required this.id,
@@ -49,6 +51,8 @@ class OrderListItemModel {
     this.customerPhone,
     this.deliveryType,
     this.deliveryFee,
+    this.slaughterDate,
+    this.slaughterTime,
   });
 
   factory OrderListItemModel.fromJson(Map<String, dynamic> json) {
@@ -78,6 +82,8 @@ class OrderListItemModel {
       customerPhone: custPhone,
       deliveryType: _parseString(json['delivery_type']),
       deliveryFee: _parseDouble(json['delivery_fee']),
+      slaughterDate: _parseString(json['slaughter_date']),
+      slaughterTime: _parseString(json['slaughter_time']),
     );
   }
 
@@ -97,6 +103,8 @@ class OrderListItemModel {
         customerPhone: customerPhone,
         deliveryType: deliveryType,
         deliveryFee: deliveryFee,
+        slaughterDate: slaughterDate,
+        slaughterTime: slaughterTime,
       );
 }
 
@@ -109,8 +117,14 @@ class OrderLineModel {
   final double discount;
   final double priceSubtotal;
   final double discountAmount;
+  final int? sizeId;
+  final String? sizeName;
+  final double sizePrice;
+  final double cuttingPrice;
+  final double packagingPrice;
   final Map<String, dynamic>? cuttingOption;
   final Map<String, dynamic>? packaging;
+  final List<dynamic> packagingOptions;
   final List<dynamic> excludedParts;
 
   OrderLineModel({
@@ -122,12 +136,52 @@ class OrderLineModel {
     required this.discount,
     required this.priceSubtotal,
     required this.discountAmount,
+    this.sizeId,
+    this.sizeName,
+    this.sizePrice = 0.0,
+    this.cuttingPrice = 0.0,
+    this.packagingPrice = 0.0,
     this.cuttingOption,
     this.packaging,
+    this.packagingOptions = const [],
     this.excludedParts = const [],
   });
 
   factory OrderLineModel.fromJson(Map<String, dynamic> json) {
+    final sizeMap = json['size'] is Map<String, dynamic>
+        ? json['size'] as Map<String, dynamic>
+        : null;
+    final parsedSizeId = json['size_id'] != null
+        ? _parseInt(json['size_id'])
+        : (sizeMap != null ? _parseInt(sizeMap['id']) : null);
+    final parsedSizeName =
+        _parseString(json['size_name']) ?? _parseString(sizeMap?['name']);
+    final parsedSizePrice = _parseDouble(json['size_price']) > 0
+        ? _parseDouble(json['size_price'])
+        : _parseDouble(sizeMap?['price']);
+
+    Map<String, dynamic>? cuttingMap;
+    if (json['cutting_option'] is Map<String, dynamic>) {
+      cuttingMap = json['cutting_option'] as Map<String, dynamic>;
+    } else if (_parseString(json['cutting_option_name']) != null) {
+      cuttingMap = {
+        'id': 0,
+        'name': _parseString(json['cutting_option_name']),
+        'extra_price': _parseDouble(json['cutting_price']),
+      };
+    }
+
+    Map<String, dynamic>? pkgMap;
+    if (json['packaging'] is Map<String, dynamic>) {
+      pkgMap = json['packaging'] as Map<String, dynamic>;
+    } else if (_parseString(json['packaging_name']) != null) {
+      pkgMap = {
+        'id': 0,
+        'name': _parseString(json['packaging_name']),
+        'extra_price': _parseDouble(json['packaging_price']),
+      };
+    }
+
     return OrderLineModel(
       id: _parseInt(json['id']),
       productId: json['product_id'] != null ? _parseInt(json['product_id']) : null,
@@ -137,21 +191,30 @@ class OrderLineModel {
       discount: _parseDouble(json['discount']),
       priceSubtotal: _parseDouble(json['price_subtotal']),
       discountAmount: _parseDouble(json['discount_amount']),
-      cuttingOption: json['cutting_option'] is Map<String, dynamic>
-          ? json['cutting_option'] as Map<String, dynamic>
-          : null,
-      packaging: json['packaging'] is Map<String, dynamic>
-          ? json['packaging'] as Map<String, dynamic>
-          : null,
+      sizeId: parsedSizeId != null && parsedSizeId > 0 ? parsedSizeId : null,
+      sizeName: parsedSizeName,
+      sizePrice: parsedSizePrice,
+      cuttingPrice: _parseDouble(json['cutting_price']),
+      packagingPrice: _parseDouble(json['packaging_price']),
+      cuttingOption: cuttingMap,
+      packaging: pkgMap,
+      packagingOptions: json['packaging_options'] is List
+          ? json['packaging_options'] as List
+          : [],
       excludedParts: json['excluded_parts'] is List ? json['excluded_parts'] as List : [],
     );
   }
 
   static ProductOption? _toOption(Map<String, dynamic>? map) {
     if (map == null) return null;
+    final name = _parseString(map['name']) ?? '';
+    if (name.isEmpty) return null;
     return ProductOption(
       id: _parseInt(map['id']),
-      name: _parseString(map['name']) ?? '',
+      name: name,
+      nameAr: _parseString(map['name_ar']),
+      nameEn: _parseString(map['name_en']),
+      extraPrice: _parseDouble(map['extra_price'] ?? map['price']),
     );
   }
 
@@ -162,24 +225,46 @@ class OrderLineModel {
           (e) => ProductOption(
             id: _parseInt(e['id']),
             name: _parseString(e['name']) ?? '',
+            nameAr: _parseString(e['name_ar']),
+            nameEn: _parseString(e['name_en']),
+            extraPrice: _parseDouble(e['extra_price'] ?? e['price']),
           ),
         )
         .toList();
   }
 
-  OrderLineEntity toDomain() => OrderLineEntity(
-        id: id,
-        productId: productId,
-        name: name,
-        priceUnit: priceUnit,
-        quantity: quantity,
-        discount: discount,
-        priceSubtotal: priceSubtotal,
-        discountAmount: discountAmount,
-        cuttingOption: _toOption(cuttingOption),
-        packaging: _toOption(packaging),
-        excludedParts: _toOptionList(excludedParts),
-      );
+  OrderLineEntity toDomain() {
+    final cutOpt = _toOption(cuttingOption);
+    final pkgOpt = _toOption(packaging);
+    final pkgList = _toOptionList(packagingOptions);
+    final resolvedCuttingPrice = cuttingPrice > 0
+        ? cuttingPrice
+        : (cutOpt?.extraPrice ?? 0.0);
+    final resolvedPackagingPrice = packagingPrice > 0
+        ? packagingPrice
+        : (pkgOpt?.extraPrice ??
+            pkgList.fold<double>(0.0, (sum, p) => sum + (p.extraPrice ?? 0.0)));
+
+    return OrderLineEntity(
+      id: id,
+      productId: productId,
+      name: name,
+      priceUnit: priceUnit,
+      quantity: quantity,
+      discount: discount,
+      priceSubtotal: priceSubtotal,
+      discountAmount: discountAmount,
+      sizeId: sizeId,
+      sizeName: sizeName,
+      sizePrice: sizePrice,
+      cuttingPrice: resolvedCuttingPrice,
+      packagingPrice: resolvedPackagingPrice,
+      cuttingOption: cutOpt,
+      packaging: pkgOpt,
+      packagingOptions: pkgList,
+      excludedParts: _toOptionList(excludedParts),
+    );
+  }
 }
 
 class OrderTimelineModel {
@@ -238,6 +323,8 @@ class OrderDetailModel {
   final String? customerEmail;
   final String? deliveryType;
   final String? shippingAddress;
+  final String? slaughterDate;
+  final String? slaughterTime;
   final int? loyaltyPointsEarned;
   final List<OrderLineModel> lines;
   final List<OrderTimelineModel> timeline;
@@ -264,6 +351,8 @@ class OrderDetailModel {
     this.customerEmail,
     this.deliveryType,
     this.shippingAddress,
+    this.slaughterDate,
+    this.slaughterTime,
     this.loyaltyPointsEarned,
     required this.lines,
     required this.timeline,
@@ -318,6 +407,8 @@ class OrderDetailModel {
       customerEmail: custEmail,
       deliveryType: _parseString(json['delivery_type']),
       shippingAddress: shipAddr,
+      slaughterDate: _parseString(json['slaughter_date']),
+      slaughterTime: _parseString(json['slaughter_time']),
       loyaltyPointsEarned: _parseInt(json['loyalty_points_earned']),
       lines: rawLines
           .whereType<Map<String, dynamic>>()
@@ -352,6 +443,8 @@ class OrderDetailModel {
         customerEmail: customerEmail,
         deliveryType: deliveryType,
         shippingAddress: shippingAddress,
+        slaughterDate: slaughterDate,
+        slaughterTime: slaughterTime,
         loyaltyPointsEarned: loyaltyPointsEarned,
         lines: lines.map((e) => e.toDomain()).toList(),
         timeline: timeline.map((e) => e.toDomain()).toList(),
@@ -368,6 +461,8 @@ class CheckoutResultModel {
   final int pointsRedeemed;
   final double loyaltyDiscountAmount;
   final double total;
+  final String? slaughterDate;
+  final String? slaughterTime;
   final String? paymentUrl;
   final String? publishableKey;
   final int? amountMinorUnits;
@@ -382,6 +477,8 @@ class CheckoutResultModel {
     required this.pointsRedeemed,
     required this.loyaltyDiscountAmount,
     required this.total,
+    this.slaughterDate,
+    this.slaughterTime,
     this.paymentUrl,
     this.publishableKey,
     this.amountMinorUnits,
@@ -398,6 +495,8 @@ class CheckoutResultModel {
       pointsRedeemed: _parseInt(json['points_redeemed']),
       loyaltyDiscountAmount: _parseDouble(json['loyalty_discount_amount']),
       total: _parseDouble(json['total']),
+      slaughterDate: _parseString(json['slaughter_date']),
+      slaughterTime: _parseString(json['slaughter_time']),
       paymentUrl: _parseString(json['payment_url']),
       publishableKey: _parseString(json['publishable_key']),
       amountMinorUnits: _parseInt(json['amount_minor_units']),
@@ -414,6 +513,8 @@ class CheckoutResultModel {
         pointsRedeemed: pointsRedeemed,
         loyaltyDiscountAmount: loyaltyDiscountAmount,
         total: total,
+        slaughterDate: slaughterDate,
+        slaughterTime: slaughterTime,
         paymentUrl: paymentUrl,
         publishableKey: publishableKey,
         amountMinorUnits: amountMinorUnits,

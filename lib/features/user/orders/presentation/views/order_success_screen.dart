@@ -66,6 +66,54 @@ class OrderSuccessScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              if ((result.slaughterDate != null &&
+                      result.slaughterDate!.isNotEmpty) ||
+                  (result.slaughterTime != null &&
+                      result.slaughterTime!.isNotEmpty)) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_month_rounded,
+                        size: 18,
+                        color: cs.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'موعد الذبح والتجهيز: ${[result.slaughterDate, result.slaughterTime].whereType<String>().where((e) => e.isNotEmpty).join(" • ")}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (result.pointsRedeemed > 0 &&
+                  result.loyaltyDiscountAmount > 0) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'تم استبدال ${result.pointsRedeemed} نقطة (خصم ${result.loyaltyDiscountAmount.toStringAsFixed(2)} ${s.sar})',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.green.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
               const Spacer(),
               ElevatedButton(
                 onPressed: () {

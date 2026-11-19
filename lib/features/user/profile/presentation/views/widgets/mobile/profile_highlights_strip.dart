@@ -15,63 +15,99 @@ class ProfileHighlightsStrip extends StatelessWidget {
   const ProfileHighlightsStrip({super.key, required this.profile});
 
   void _pickMedia(BuildContext context, HighlightCubit cubit) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Image'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final picker = ImagePicker();
-                final image = await picker.pickImage(
-                  source: ImageSource.gallery,
-                );
-                if (image != null && context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BlocProvider.value(
-                        value: cubit,
-                        child: HighlightEditorScreen(
-                          filePath: image.path,
-                          mediaType: 'image',
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.image_rounded, color: Colors.blue),
+                ),
+                title: Text(
+                  isAr ? 'اختيار صورة من المعرض' : 'Select Image from Gallery',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final picker = ImagePicker();
+                  final image = await picker.pickImage(
+                    source: ImageSource.gallery,
+                  );
+                  if (image != null && context.mounted) {
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: cubit,
+                          child: HighlightEditorScreen(
+                            filePath: image.path,
+                            mediaType: 'image',
+                          ),
                         ),
                       ),
-                    ),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.videocam_rounded, color: Colors.purple),
+                ),
+                title: Text(
+                  isAr ? 'اختيار فيديو من المعرض' : 'Select Video from Gallery',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final picker = ImagePicker();
+                  final video = await picker.pickVideo(
+                    source: ImageSource.gallery,
                   );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.videocam),
-              title: const Text('Video'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final picker = ImagePicker();
-                final video = await picker.pickVideo(
-                  source: ImageSource.gallery,
-                );
-                if (video != null && context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BlocProvider.value(
-                        value: cubit,
-                        child: HighlightEditorScreen(
-                          filePath: video.path,
-                          mediaType: 'video',
+                  if (video != null && context.mounted) {
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: cubit,
+                          child: HighlightEditorScreen(
+                            filePath: video.path,
+                            mediaType: 'video',
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -139,6 +175,7 @@ class ProfileHighlightsStrip extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
         List<HighlightEntity> highlights = [];
         bool isUploading = state is HighlightUploading;
 
@@ -197,7 +234,7 @@ class ProfileHighlightsStrip extends StatelessWidget {
                           SizedBox(
                             width: 65,
                             child: Text(
-                              'New',
+                              isAr ? 'جديد' : 'New',
                               style: theme.textTheme.labelMedium?.copyWith(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
@@ -261,7 +298,7 @@ class ProfileHighlightsStrip extends StatelessWidget {
                             SizedBox(
                               width: 65,
                               child: Text(
-                                'Highlights',
+                                isAr ? 'القصص' : 'Highlights',
                                 style: theme.textTheme.labelMedium?.copyWith(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w400,

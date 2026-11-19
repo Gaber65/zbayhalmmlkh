@@ -17,19 +17,24 @@ class CartItemCard extends StatelessWidget {
     final s = S.of(context);
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
+    final cuttingFee = line.cuttingPrice > 0
+        ? line.cuttingPrice
+        : (line.cuttingOption?.extraPrice ?? 0.0);
     final cuttingName = line.cuttingOption != null
-        ? (isAr
-              ? (line.cuttingOption!.nameAr ?? line.cuttingOption!.name)
-              : (line.cuttingOption!.nameEn ?? line.cuttingOption!.name))
+        ? '${isAr ? (line.cuttingOption!.nameAr ?? line.cuttingOption!.name) : (line.cuttingOption!.nameEn ?? line.cuttingOption!.name)}${cuttingFee > 0 ? " (+${cuttingFee.toStringAsFixed(0)} ${s.sar})" : ""}'
         : null;
 
     final pkgNames = line.packagingOptions
-        .map((p) => isAr ? (p.nameAr ?? p.name) : (p.nameEn ?? p.name))
-        .join(', ');
+        .map((p) {
+          final name = isAr ? (p.nameAr ?? p.name) : (p.nameEn ?? p.name);
+          final fee = p.extraPrice ?? 0.0;
+          return fee > 0 ? '$name (+${fee.toStringAsFixed(0)} ${s.sar})' : name;
+        })
+        .join('، ');
 
     final excludedNames = line.excludedParts
         .map((p) => isAr ? (p.nameAr ?? p.name) : (p.nameEn ?? p.name))
-        .join(', ');
+        .join('، ');
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -119,7 +124,8 @@ class CartItemCard extends StatelessWidget {
               ),
             ],
           ),
-          if (cuttingName != null ||
+          if ((line.sizeName != null && line.sizeName!.isNotEmpty) ||
+              cuttingName != null ||
               pkgNames.isNotEmpty ||
               excludedNames.isNotEmpty ||
               (line.notes != null && line.notes!.isNotEmpty)) ...[
@@ -130,6 +136,12 @@ class CartItemCard extends StatelessWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
+                if (line.sizeName != null && line.sizeName!.isNotEmpty)
+                  OptionBadge(
+                    icon: Icons.straighten_rounded,
+                    label: '${isAr ? "الحجم" : "Size"}: ${line.sizeName}',
+                    color: Colors.teal,
+                  ),
                 if (cuttingName != null)
                   OptionBadge(
                     icon: Icons.content_cut_rounded,

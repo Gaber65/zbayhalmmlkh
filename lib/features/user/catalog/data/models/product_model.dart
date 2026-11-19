@@ -57,6 +57,18 @@ class ProductModel extends Equatable {
   @JsonKey(name: 'is_available', defaultValue: true)
   final bool isAvailable;
 
+  @JsonKey(name: 'is_carcass', defaultValue: false)
+  final bool isCarcass;
+
+  @JsonKey(name: 'is_shalwata', defaultValue: false)
+  final bool isShalwata;
+
+  @JsonKey(name: 'shalwata_price')
+  final double? shalwataPrice;
+
+  @JsonKey(name: 'portions')
+  final List<dynamic>? portions;
+
   @JsonKey(name: 'stock_quantity')
   final double? stockQuantity;
 
@@ -129,6 +141,9 @@ class ProductModel extends Equatable {
   @JsonKey(name: 'calories')
   final int? calories;
 
+  @JsonKey(name: 'sequence', defaultValue: 10)
+  final int sequence;
+
   const ProductModel({
     required this.id,
     this.name,
@@ -170,7 +185,12 @@ class ProductModel extends Equatable {
     this.images,
     this.hasSizes = false,
     this.sizes,
+    this.isCarcass = false,
+    this.isShalwata = false,
+    this.shalwataPrice,
+    this.portions,
     this.calories,
+    this.sequence = 10,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -279,6 +299,17 @@ class ProductModel extends Equatable {
     }).whereType<ProductSize>().toList();
   }
 
+  /// Parse carcass portions from backend
+  static List<ProductPortion> _parsePortions(List<dynamic>? raw) {
+    if (raw == null) return [];
+    return raw.map((e) {
+      if (e is Map) {
+        return ProductPortion.fromMap(Map<String, dynamic>.from(e));
+      }
+      return null;
+    }).whereType<ProductPortion>().toList();
+  }
+
   Product toDomain() {
     final effectiveSellingPrice =
         sellingPrice ?? (isOnOffer ? offerPrice ?? 0.0 : price);
@@ -323,6 +354,8 @@ class ProductModel extends Equatable {
       isBestSeller: isBestSeller,
       isAvailable: isAvailable,
       active: active,
+      isCarcass: isCarcass,
+      portions: _parsePortions(portions),
       stockQuantity: stockQuantity,
       minimumStock: minimumStock,
       weightKg: parsedWeight,
@@ -333,6 +366,7 @@ class ProductModel extends Equatable {
       hasSizes: hasSizes || (sizes != null && sizes!.isNotEmpty),
       sizes: _parseSizes(sizes),
       calories: calories ?? 0,
+      sequence: sequence,
       cuttingOptions: _parseOptions(cuttingOptions),
       packagingOptions: _parseOptions(packagingOptions),
       excludedParts: _parseOptions(excludedParts),

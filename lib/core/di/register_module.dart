@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
 import '../api/api_interceptors.dart';
+import '../api/deduping_interceptor.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 @module
@@ -24,8 +25,9 @@ abstract class RegisterModule {
     final dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 15),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -33,6 +35,7 @@ abstract class RegisterModule {
       ),
     );
 
+    dio.interceptors.add(DedupingInterceptor());
     dio.interceptors.add(LangInterceptor(prefs: prefs));
     dio.interceptors.add(
       AuthInterceptor(

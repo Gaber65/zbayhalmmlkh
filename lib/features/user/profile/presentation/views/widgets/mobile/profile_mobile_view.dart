@@ -1,3 +1,4 @@
+import 'package:dhabayih_lmamlaka/core/widgets/skeleton_loading.dart';
 import 'package:dhabayih_lmamlaka/features/user/profile/domain/entities/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,6 +16,7 @@ import 'package:dhabayih_lmamlaka/features/shared/auth/domain/entities/user_type
 import 'package:dhabayih_lmamlaka/features/shared/auth/presentation/manager/auth_state.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../edit_profile_bottom_sheet.dart';
+import '../delete_account_dialog.dart';
 import 'profile_highlights_strip.dart';
 import 'profile_avatar_highlight.dart';
 
@@ -43,7 +45,7 @@ class ProfileMobileView extends StatelessWidget {
     }
 
     if (state is ProfileLoading || state is ProfileInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return _buildSkeleton(context);
     } else if (state is ProfileError) {
       return _buildErrorBody(context, (state as ProfileError).message);
     } else if (state is ProfileLoaded) {
@@ -137,7 +139,7 @@ class ProfileMobileView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isAr ? '🇺🇦 EN' : '🇸🇦 AR',
+                    isAr ? '🇬🇧 EN' : '🇸🇦 AR',
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -168,6 +170,44 @@ class ProfileMobileView extends StatelessWidget {
                 onTap: () {
                   context.read<AppCubit>().toggleTheme();
                 },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildSettingsSection(
+            context,
+            children: [
+              _buildSettingsTile(
+                context,
+                icon: Icons.favorite_border_rounded,
+                title: isAr ? 'المفضلة' : 'Wishlist & Favorites',
+                subtitle: isAr ? 'الذبائح والمنتجات المحفوظة' : 'Your saved products',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () => context.push(Routes.favorites),
+              ),
+              const Divider(height: 1),
+              _buildSettingsTile(
+                context,
+                icon: Icons.chat_rounded,
+                customLeading: SvgPicture.asset(
+                  'assets/images/whatsapp_logo.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: const ColorFilter.mode(Color(0xFF25D366), BlendMode.srcIn),
+                ),
+                title: isAr ? 'خدمة العملاء (واتساب)' : 'Customer Support (WhatsApp)',
+                subtitle: isAr ? 'تواصل مباشر مع خدمة عملاء ذبائح المملكة' : 'Direct chat with Dhabayih Al-Mamlaka support',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF16A34A)),
+                onTap: () => WhatsAppHelper.launchSupportChat(),
+              ),
+              const Divider(height: 1),
+              _buildSettingsTile(
+                context,
+                icon: Icons.shield_outlined,
+                title: isAr ? 'سياسة الخصوصية والشروط والأحكام' : 'Privacy Policy & Terms of Service',
+                subtitle: isAr ? 'ضمانات الذبح، التوصيل، وحماية البيانات' : 'Slaughter standards, delivery & data privacy',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () => context.push(Routes.privacyPolicy),
               ),
             ],
           ),
@@ -342,7 +382,7 @@ class ProfileMobileView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    isAr ? '🇺🇦 EN' : '🇸🇦 AR',
+                    isAr ? '🇬🇧 EN' : '🇸🇦 AR',
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -395,6 +435,14 @@ class ProfileMobileView extends StatelessWidget {
                 title: S.of(context).edit_profile,
                 onTap: () => EditProfileBottomSheet.show(context, profile),
               ),
+              _buildSettingsTile(
+                context,
+                icon: Icons.favorite_border_rounded,
+                title: isAr ? 'المفضلة' : 'Wishlist & Favorites',
+                subtitle: isAr ? 'الذبائح والمنتجات المحفوظة' : 'Your saved products',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () => context.push(Routes.favorites),
+              ),
               const Divider(height: 1),
               _buildSettingsTile(
                 context,
@@ -419,18 +467,27 @@ class ProfileMobileView extends StatelessWidget {
                   height: 22,
                   colorFilter: const ColorFilter.mode(Color(0xFF25D366), BlendMode.srcIn),
                 ),
-                title: 'خدمة العملاء (واتساب)',
-                subtitle: 'تواصل مباشر مع خدمة عملاء ذبائح المملكة',
+                title: isAr ? 'خدمة العملاء (واتساب)' : 'Customer Support (WhatsApp)',
+                subtitle: isAr ? 'تواصل مباشر مع خدمة عملاء ذبائح المملكة' : 'Direct chat with Dhabayih Al-Mamlaka support',
                 trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF16A34A)),
                 onTap: () => WhatsAppHelper.launchSupportChat(),
+              ),
+              const Divider(height: 1),
+              _buildSettingsTile(
+                context,
+                icon: Icons.shield_outlined,
+                title: isAr ? 'سياسة الخصوصية والشروط والأحكام' : 'Privacy Policy & Terms of Service',
+                subtitle: isAr ? 'ضمانات الذبح، التوصيل، وحماية البيانات' : 'Slaughter standards, delivery & data privacy',
+                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                onTap: () => context.push(Routes.privacyPolicy),
               ),
               if (isAdmin) ...[
                 const Divider(height: 1),
                 _buildSettingsTile(
                   context,
                   icon: Icons.admin_panel_settings_rounded,
-                  title: 'لوحة إدارة التطبيق (الأدمن)',
-                  subtitle: 'إدارة المنتجات، الطلبات، الأقسام، والكوبونات',
+                  title: isAr ? 'لوحة إدارة التطبيق (الأدمن)' : 'Admin Control Panel (ERP)',
+                  subtitle: isAr ? 'إدارة المنتجات، الطلبات، الأقسام، والكوبونات' : 'Manage products, orders, categories & coupons',
                   trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFC59A3F)),
                   onTap: () => context.go(Routes.adminDashboard),
                 ),
@@ -459,6 +516,28 @@ class ProfileMobileView extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: OutlinedButton.icon(
+              onPressed: () => showDeleteAccountConfirmationDialog(context),
+              icon: Icon(Icons.delete_outline, color: colorScheme.error),
+              label: Text(
+                S.of(context).delete_account,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+                side: BorderSide(color: colorScheme.error.withValues(alpha: 0.4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
               ),
             ),
@@ -528,6 +607,58 @@ class ProfileMobileView extends StatelessWidget {
             size: 14,
             color: colorScheme.onSurfaceVariant,
           ),
+    );
+  }
+
+  Widget _buildSkeleton(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Column(
+        children: [
+          // Avatar Skeleton
+          const Center(
+            child: SkeletonBox(
+              width: 90,
+              height: 90,
+              borderRadius: 45,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // User Name & Phone Skeleton
+          const SkeletonBox(
+            width: 160,
+            height: 20,
+            borderRadius: 8,
+          ),
+          const SizedBox(height: 8),
+          const SkeletonBox(
+            width: 110,
+            height: 14,
+            borderRadius: 6,
+          ),
+          const SizedBox(height: 24),
+          // Loyalty & Wallet Card Skeleton
+          const SkeletonBox(
+            width: double.infinity,
+            height: 80,
+            borderRadius: 16,
+          ),
+          const SizedBox(height: 24),
+          // Settings Menu List Skeletons
+          ...List.generate(
+            4,
+            (_) => const Padding(
+              padding: EdgeInsets.only(bottom: 12.0),
+              child: SkeletonBox(
+                width: double.infinity,
+                height: 56,
+                borderRadius: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -15,6 +15,8 @@ abstract class OrderRepository {
     String? notes,
     String? couponCode,
     bool? redeemPoints,
+    String? slaughterDate,
+    String? slaughterTime,
   });
 
   Future<Either<Failure, List<OrderListItemEntity>>> getOrders({

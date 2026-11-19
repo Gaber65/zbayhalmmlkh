@@ -47,6 +47,7 @@ class UserHighlight extends Equatable {
   final String email;
   final String avatarUrl;
   final double balance;
+  final int loyaltyPoints;
   final ActiveCart? activeCart;
 
   const UserHighlight({
@@ -55,11 +56,48 @@ class UserHighlight extends Equatable {
     required this.email,
     required this.avatarUrl,
     required this.balance,
+    this.loyaltyPoints = 0,
     this.activeCart,
   });
 
+  /// Returns non-zero loyalty points from backend, falling back to integer balance when points are stored in balance.
+  int get effectivePoints =>
+      loyaltyPoints > 0 ? loyaltyPoints : (balance > 0 ? balance.round() : 0);
+
+  /// Returns non-zero balance, falling back to loyaltyPoints when balance is 0 on the backend.
+  double get effectiveBalance =>
+      balance > 0 ? balance : loyaltyPoints.toDouble();
+
+  UserHighlight copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? avatarUrl,
+    double? balance,
+    int? loyaltyPoints,
+    ActiveCart? activeCart,
+  }) {
+    return UserHighlight(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      balance: balance ?? this.balance,
+      loyaltyPoints: loyaltyPoints ?? this.loyaltyPoints,
+      activeCart: activeCart ?? this.activeCart,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, name, email, avatarUrl, balance, activeCart];
+  List<Object?> get props => [
+        id,
+        name,
+        email,
+        avatarUrl,
+        balance,
+        loyaltyPoints,
+        activeCart,
+      ];
 }
 
 class ActiveCart extends Equatable {

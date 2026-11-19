@@ -17,6 +17,8 @@ class OrderListItemEntity extends Equatable {
   final String? customerPhone;
   final String? deliveryType;
   final double? deliveryFee;
+  final String? slaughterDate;
+  final String? slaughterTime;
 
   const OrderListItemEntity({
     required this.id,
@@ -34,6 +36,8 @@ class OrderListItemEntity extends Equatable {
     this.customerPhone,
     this.deliveryType,
     this.deliveryFee,
+    this.slaughterDate,
+    this.slaughterTime,
   });
 
   @override
@@ -53,6 +57,8 @@ class OrderListItemEntity extends Equatable {
         customerPhone,
         deliveryType,
         deliveryFee,
+        slaughterDate,
+        slaughterTime,
       ];
 }
 
@@ -65,8 +71,14 @@ class OrderLineEntity extends Equatable {
   final double discount;
   final double priceSubtotal;
   final double discountAmount;
+  final int? sizeId;
+  final String? sizeName;
+  final double sizePrice;
+  final double cuttingPrice;
+  final double packagingPrice;
   final ProductOption? cuttingOption;
   final ProductOption? packaging;
+  final List<ProductOption> packagingOptions;
   final List<ProductOption> excludedParts;
 
   const OrderLineEntity({
@@ -78,8 +90,14 @@ class OrderLineEntity extends Equatable {
     required this.discount,
     required this.priceSubtotal,
     required this.discountAmount,
+    this.sizeId,
+    this.sizeName,
+    this.sizePrice = 0.0,
+    this.cuttingPrice = 0.0,
+    this.packagingPrice = 0.0,
     this.cuttingOption,
     this.packaging,
+    this.packagingOptions = const [],
     required this.excludedParts,
   });
 
@@ -93,8 +111,14 @@ class OrderLineEntity extends Equatable {
         discount,
         priceSubtotal,
         discountAmount,
+        sizeId,
+        sizeName,
+        sizePrice,
+        cuttingPrice,
+        packagingPrice,
         cuttingOption,
         packaging,
+        packagingOptions,
         excludedParts,
       ];
 }
@@ -146,6 +170,8 @@ class OrderDetailEntity extends Equatable {
   final String? customerEmail;
   final String? deliveryType;
   final String? shippingAddress;
+  final String? slaughterDate;
+  final String? slaughterTime;
   final int? loyaltyPointsEarned;
   final List<OrderLineEntity> lines;
   final List<OrderTimelineEntity> timeline;
@@ -172,6 +198,8 @@ class OrderDetailEntity extends Equatable {
     this.customerEmail,
     this.deliveryType,
     this.shippingAddress,
+    this.slaughterDate,
+    this.slaughterTime,
     this.loyaltyPointsEarned,
     required this.lines,
     required this.timeline,
@@ -206,6 +234,8 @@ class OrderDetailEntity extends Equatable {
         customerEmail,
         deliveryType,
         shippingAddress,
+        slaughterDate,
+        slaughterTime,
         loyaltyPointsEarned,
         lines,
         timeline,
@@ -222,6 +252,8 @@ class CheckoutResultEntity extends Equatable {
   final int pointsRedeemed;
   final double loyaltyDiscountAmount;
   final double total;
+  final String? slaughterDate;
+  final String? slaughterTime;
   final String? paymentUrl;
   final String? publishableKey;
   final int? amountMinorUnits;
@@ -236,6 +268,8 @@ class CheckoutResultEntity extends Equatable {
     required this.pointsRedeemed,
     required this.loyaltyDiscountAmount,
     required this.total,
+    this.slaughterDate,
+    this.slaughterTime,
     this.paymentUrl,
     this.publishableKey,
     this.amountMinorUnits,
@@ -252,6 +286,8 @@ class CheckoutResultEntity extends Equatable {
         pointsRedeemed,
         loyaltyDiscountAmount,
         total,
+        slaughterDate,
+        slaughterTime,
         paymentUrl,
         publishableKey,
         amountMinorUnits,

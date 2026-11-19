@@ -7,6 +7,7 @@ class ServerStrings {
   static const String login = '/api/v1/auth/login';
   static const String profile = '/api/v1/me';
   static const String updateProfile = '/api/v1/me';
+  static const String deleteAccount = '/api/v1/me';
   static const String refreshToken = '/api/v1/auth/refresh';
 
   static const String logout = '/api/v1/auth/logout';
@@ -31,6 +32,10 @@ class ServerStrings {
   static const String clearCart = '/api/v1/cart/clear';
   static const String checkout = '/api/v1/checkout';
   static const String paymentMethods = '/api/v1/payment-methods';
+
+  // Favorites
+  static const String favorites = '/api/v1/favorites';
+  static String removeFavorite(int productId) => '/api/v1/favorites/$productId';
 
 
   // 5. Coupons & Promo Codes

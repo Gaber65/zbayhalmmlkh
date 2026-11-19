@@ -251,6 +251,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "الرياض، السعودية",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("حذف"),
+    "delete_account": MessageLookupByLibrary.simpleMessage("حذف الحساب"),
+    "delete_account_confirm_button": MessageLookupByLibrary.simpleMessage(
+      "نعم، احذف الحساب",
+    ),
+    "delete_account_confirm_message": MessageLookupByLibrary.simpleMessage(
+      "هل أنت متأكد من رغبتك في حذف حسابك؟ سيتم حذف بياناتك الشخصية وعناوينك المحفوظة نهائياً ولا يمكن التراجع عن هذا الإجراء.",
+    ),
+    "delete_account_confirm_title": MessageLookupByLibrary.simpleMessage(
+      "حذف الحساب نهائياً",
+    ),
+    "delete_account_success": MessageLookupByLibrary.simpleMessage(
+      "تم حذف حسابك بنجاح",
+    ),
     "delivery_fee": MessageLookupByLibrary.simpleMessage("رسوم التوصيل"),
     "delivery_schedule": MessageLookupByLibrary.simpleMessage("موعد التوصيل"),
     "delivery_to": MessageLookupByLibrary.simpleMessage("التوصيل إلى"),

@@ -293,5 +293,11 @@
   "time_slot_evening": "Evening (5:00 PM - 10:00 PM)",
   "today": "Today",
   "tomorrow": "Tomorrow",
-  "custom_date": "Choose Date"
+  "custom_date": "Choose Date",
+  "delete_account": "Delete Account",
+  "delete_account_confirm_title": "Delete Account Permanently",
+  "delete_account_confirm_message": "Are you sure you want to delete your account? Your personal data and saved addresses will be permanently removed and this action cannot be undone.",
+  "delete_account_confirm_button": "Yes, Delete Account",
+  "delete_account_success": "Your account has been deleted successfully",
+  "cancel": "Cancel"
 }

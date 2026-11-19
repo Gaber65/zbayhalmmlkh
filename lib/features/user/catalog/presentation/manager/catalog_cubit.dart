@@ -1,5 +1,9 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+import 'package:dhabayih_lmamlaka/core/error/failure.dart';
+import '../../domain/entities/category.dart';
+import '../../domain/entities/product.dart';
 import '../../domain/repositories/catalog_repository.dart';
 import 'catalog_state.dart';
 
@@ -10,39 +14,56 @@ class CatalogCubit extends Cubit<CatalogState> {
   CatalogCubit({required this.repository}) : super(CatalogInitial());
 
   Future<void> fetchCatalog() async {
-    emit(CatalogLoading());
+    if (!isClosed) emit(CatalogLoading());
 
-    final categoriesResult = await repository.getCategories();
-    final productsResult = await repository.getProducts();
-    final offersResult = await repository.getOffers();
-    final bestSellersResult = await repository.getBestSellers();
+    // Parallelize network requests to eliminate waterfall latency
+    final results = await Future.wait([
+      repository.getCategories(),
+      repository.getProducts(),
+      repository.getOffers(),
+      repository.getBestSellers(),
+    ]);
 
-    categoriesResult.fold(
-      (failure) => emit(CatalogError(failure.error.message)),
-      (categories) {
-        productsResult.fold(
-          (failure) => emit(CatalogError(failure.error.message)),
-          (products) {
-            offersResult.fold(
-              (failure) => emit(CatalogError(failure.error.message)),
-              (offers) {
-                bestSellersResult.fold(
-                  (failure) => emit(CatalogError(failure.error.message)),
-                  (bestSellers) {
-                    emit(CatalogLoaded(
-                      categories: categories,
-                      products: products,
-                      offers: offers,
-                      bestSellers: bestSellers,
-                    ));
-                  },
-                );
-              },
-            );
-          },
-        );
+    final categoriesResult = results[0] as Either<Failure, List<Category>>;
+    final productsResult = results[1] as Either<Failure, List<Product>>;
+    final offersResult = results[2] as Either<Failure, List<Product>>;
+    final bestSellersResult = results[3] as Either<Failure, List<Product>>;
+
+    String? errorMsg;
+    final categories = categoriesResult.fold<List<Category>>(
+      (failure) {
+        errorMsg ??= failure.error.message;
+        return const [];
       },
+      (list) => list,
     );
+    final products = productsResult.fold<List<Product>>(
+      (failure) {
+        errorMsg ??= failure.error.message;
+        return const [];
+      },
+      (list) => list,
+    );
+    final offers = offersResult.fold<List<Product>>(
+      (_) => const [],
+      (list) => list,
+    );
+    final bestSellers = bestSellersResult.fold<List<Product>>(
+      (_) => const [],
+      (list) => list,
+    );
+
+    if (categories.isEmpty && products.isEmpty && errorMsg != null) {
+      emit(CatalogError(errorMsg!));
+      return;
+    }
+
+    emit(CatalogLoaded(
+      categories: categories,
+      products: products,
+      offers: offers,
+      bestSellers: bestSellers,
+    ));
   }
 
   Future<void> fetchProductsByCategory(int categoryId) async {

@@ -25,11 +25,19 @@ class AppColors {
   static const Color onSecondaryFixed = Color(0xFF14151B);
   static const Color onSecondaryFixedVariant = Color(0xFF4A4C56);
 
-  // Tertiary Colors (Accent Amber / Star Rating)
-  static const Color tertiary = Color(0xFFFFB300);
+  // Tertiary Colors (Royal Gold / Loyalty & Star Rating matching React Web)
+  static const Color tertiary = Color(0xFFC59A3F);
   static const Color onTertiary = Color(0xFFFFFFFF);
-  static const Color tertiaryContainer = Color(0xFFFFF8E1);
-  static const Color onTertiaryContainer = Color(0xFFFF8F00);
+  static const Color tertiaryContainer = Color(0xFFFBF8EE);
+  static const Color onTertiaryContainer = Color(0xFF95662B);
+
+  // Dedicated Luxury Gold & Brand Dark Accents (unified with Web)
+  static const Color gold = Color(0xFFC59A3F);
+  static const Color goldLight = Color(0xFFDFC278);
+  static const Color goldContainer = Color(0xFFFBF8EE);
+  static const Color goldDark = Color(0xFF95662B);
+  static const Color brandDark = Color(0xFF8B1D24);
+  static const Color cardBorder = Color(0xFFE2E8F0);
 
   // Error Colors
   static const Color error = Color(0xFFE53935);
@@ -80,27 +88,18 @@ class AppColors {
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xFFEF5350),
-      Color(0xFFE53935),
-    ],
+    colors: [Color(0xFFEF5350), Color(0xFFE53935)],
   );
 
   static const LinearGradient splashGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      Color(0xFFEF5350),
-      Color(0xFFE53935),
-    ],
+    colors: [Color(0xFFEF5350), Color(0xFFE53935)],
   );
 
   static const RadialGradient ambientGlowGradient = RadialGradient(
     center: Alignment.center,
     radius: 0.8,
-    colors: [
-      Color(0xFFFFEBEE),
-      Color(0xFFFFFFFF),
-    ],
+    colors: [Color(0xFFFFEBEE), Color(0xFFFFFFFF)],
   );
 }

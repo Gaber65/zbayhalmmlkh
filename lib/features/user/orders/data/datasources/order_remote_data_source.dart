@@ -18,6 +18,8 @@ abstract class OrderRemoteDataSource {
     String? notes,
     String? couponCode,
     bool? redeemPoints,
+    String? slaughterDate,
+    String? slaughterTime,
   });
 
   Future<List<OrderListItemModel>> getOrders({
@@ -79,6 +81,8 @@ class OrderRemoteDataSourceImpl with DioErrorHandler implements OrderRemoteDataS
     String? notes,
     String? couponCode,
     bool? redeemPoints,
+    String? slaughterDate,
+    String? slaughterTime,
   }) async {
     try {
       final body = {
@@ -89,6 +93,10 @@ class OrderRemoteDataSourceImpl with DioErrorHandler implements OrderRemoteDataS
         if (notes != null && notes.isNotEmpty) 'notes': notes,
         if (couponCode != null && couponCode.isNotEmpty) 'coupon_code': couponCode,
         'redeem_points': ?redeemPoints,
+        if (slaughterDate != null && slaughterDate.isNotEmpty)
+          'slaughter_date': slaughterDate,
+        if (slaughterTime != null && slaughterTime.isNotEmpty)
+          'slaughter_time': slaughterTime,
       };
 
       final response = await dio.post(ServerStrings.checkout, data: body);

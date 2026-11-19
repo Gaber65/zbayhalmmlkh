@@ -142,6 +142,8 @@ class UserHighlightModel extends Equatable {
   final String? avatarUrl;
   @JsonKey(defaultValue: 0.0)
   final double balance;
+  @JsonKey(name: 'loyalty_points', defaultValue: 0)
+  final int loyaltyPoints;
   @JsonKey(name: 'active_cart')
   final ActiveCartModel? activeCart;
 
@@ -151,26 +153,72 @@ class UserHighlightModel extends Equatable {
     this.email,
     this.avatarUrl,
     this.balance = 0.0,
+    this.loyaltyPoints = 0,
     this.activeCart,
   });
 
-  factory UserHighlightModel.fromJson(Map<String, dynamic> json) => _$UserHighlightModelFromJson(json);
+  static double _parseNumDouble(dynamic val) {
+    if (val == null || val is bool) return 0.0;
+    if (val is num) return val.toDouble();
+    return double.tryParse(val.toString()) ?? 0.0;
+  }
+
+  static int _parseNumInt(dynamic val) {
+    if (val == null || val is bool) return 0;
+    if (val is num) return val.toInt();
+    return int.tryParse(val.toString()) ??
+        double.tryParse(val.toString())?.round() ??
+        0;
+  }
+
+  factory UserHighlightModel.fromJson(Map<String, dynamic> json) {
+    final normalized = Map<String, dynamic>.from(json);
+    final rawPoints = json['loyalty_points'] ??
+        json['points'] ??
+        json['current_points'] ??
+        json['total_points'] ??
+        json['balance_points'];
+    final parsedPoints = _parseNumInt(rawPoints);
+
+    final rawBalance =
+        json['balance'] ?? json['wallet_balance'] ?? json['credit'];
+    final parsedBalance = _parseNumDouble(rawBalance);
+
+    normalized['loyalty_points'] = parsedPoints;
+    normalized['balance'] =
+        parsedBalance > 0 ? parsedBalance : parsedPoints.toDouble();
+
+    return _$UserHighlightModelFromJson(normalized);
+  }
 
   Map<String, dynamic> toJson() => _$UserHighlightModelToJson(this);
 
   UserHighlight toDomain() {
+    final effectivePts = loyaltyPoints > 0
+        ? loyaltyPoints
+        : (balance > 0 ? balance.round() : 0);
+    final effectiveBal = balance > 0 ? balance : loyaltyPoints.toDouble();
     return UserHighlight(
       id: id,
       name: name ?? '',
       email: email ?? '',
       avatarUrl: avatarUrl ?? '',
-      balance: balance,
+      balance: effectiveBal,
+      loyaltyPoints: effectivePts,
       activeCart: activeCart?.toDomain(),
     );
   }
 
   @override
-  List<Object?> get props => [id, name, email, avatarUrl, balance, activeCart];
+  List<Object?> get props => [
+        id,
+        name,
+        email,
+        avatarUrl,
+        balance,
+        loyaltyPoints,
+        activeCart,
+      ];
 }
 
 @JsonSerializable()
@@ -267,80 +315,240 @@ class BannerModel extends Equatable {
 class HomeProductModel extends Equatable {
   final int id;
   final String? name;
+  @JsonKey(name: 'name_ar')
+  final String? nameAr;
+  @JsonKey(name: 'name_en')
+  final String? nameEn;
   final String? description;
+  final String? weight;
   @JsonKey(name: 'selling_price')
   final double? sellingPrice;
+  final double? price;
   @JsonKey(name: 'offer_price')
   final double? offerPrice;
+  @JsonKey(name: 'original_price')
+  final double? originalPrice;
   @JsonKey(name: 'is_on_offer', defaultValue: false)
   final bool isOnOffer;
   @JsonKey(name: 'is_best_seller', defaultValue: false)
   final bool isBestSeller;
+  @JsonKey(name: 'is_featured', defaultValue: false)
+  final bool isFeatured;
+  @JsonKey(name: 'is_available', defaultValue: true)
+  final bool isAvailable;
+  @JsonKey(defaultValue: true)
+  final bool active;
+  @JsonKey(name: 'is_carcass', defaultValue: false)
+  final bool isCarcass;
+  @JsonKey(name: 'has_sizes', defaultValue: false)
+  final bool hasSizes;
   @JsonKey(name: 'main_image_url')
   final String? mainImageUrl;
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
+  @JsonKey(name: 'discount_tag')
+  final String? discountTag;
+  @JsonKey(name: 'category_id')
+  final dynamic categoryId;
+  @JsonKey(name: 'category_name')
+  final String? categoryName;
+  @JsonKey(name: 'loyalty_points')
+  final int? loyaltyPoints;
   @JsonKey(name: 'cutting_options')
   final List<dynamic>? cuttingOptions;
   @JsonKey(name: 'packaging_options')
   final List<dynamic>? packagingOptions;
   @JsonKey(name: 'excluded_parts')
   final List<dynamic>? excludedParts;
+  final List<dynamic>? sizes;
+  final List<dynamic>? portions;
+  final List<dynamic>? images;
 
   const HomeProductModel({
     required this.id,
     this.name,
+    this.nameAr,
+    this.nameEn,
     this.description,
+    this.weight,
     this.sellingPrice,
+    this.price,
     this.offerPrice,
+    this.originalPrice,
     this.isOnOffer = false,
     this.isBestSeller = false,
+    this.isFeatured = false,
+    this.isAvailable = true,
+    this.active = true,
+    this.isCarcass = false,
+    this.hasSizes = false,
     this.mainImageUrl,
+    this.imageUrl,
+    this.discountTag,
+    this.categoryId,
+    this.categoryName,
+    this.loyaltyPoints,
     this.cuttingOptions,
     this.packagingOptions,
     this.excludedParts,
+    this.sizes,
+    this.portions,
+    this.images,
   });
 
-  factory HomeProductModel.fromJson(Map<String, dynamic> json) => _$HomeProductModelFromJson(json);
+  factory HomeProductModel.fromJson(Map<String, dynamic> json) {
+    final normalized = Map<String, dynamic>.from(json);
+    for (final key in [
+      'name',
+      'name_ar',
+      'name_en',
+      'description',
+      'weight',
+      'main_image_url',
+      'image_url',
+      'discount_tag',
+      'category_name',
+    ]) {
+      if (normalized[key] is bool) {
+        normalized[key] = null;
+      } else if (normalized[key] != null) {
+        normalized[key] = normalized[key].toString();
+      }
+    }
+    if (normalized['loyalty_points'] == null && json['points'] is num) {
+      normalized['loyalty_points'] = (json['points'] as num).toInt();
+    } else if (normalized['loyalty_points'] is bool) {
+      normalized['loyalty_points'] = null;
+    } else if (normalized['loyalty_points'] is num) {
+      normalized['loyalty_points'] = (normalized['loyalty_points'] as num).toInt();
+    }
+    return _$HomeProductModelFromJson(normalized);
+  }
 
   Map<String, dynamic> toJson() => _$HomeProductModelToJson(this);
 
   static List<ProductOption> _parseOptions(List<dynamic>? raw) {
     if (raw == null) return [];
     return raw
-        .whereType<Map<String, dynamic>>()
-        .map((e) => ProductOption.fromMap(e))
+        .map((e) => e is Map ? ProductOption.fromMap(Map<String, dynamic>.from(e)) : null)
+        .whereType<ProductOption>()
+        .toList();
+  }
+
+  static List<ProductSize> _parseSizes(List<dynamic>? raw) {
+    if (raw == null) return [];
+    return raw
+        .map((e) => e is Map ? ProductSize.fromMap(Map<String, dynamic>.from(e)) : null)
+        .whereType<ProductSize>()
+        .toList();
+  }
+
+  static List<ProductPortion> _parsePortions(List<dynamic>? raw) {
+    if (raw == null) return [];
+    return raw
+        .map((e) => e is Map ? ProductPortion.fromMap(Map<String, dynamic>.from(e)) : null)
+        .whereType<ProductPortion>()
+        .toList();
+  }
+
+  static List<String> _parseGalleryImages(List<dynamic>? raw) {
+    if (raw == null) return [];
+    return raw
+        .map((e) {
+          if (e is Map) {
+            return _buildImageUrl((e['image_url'] ?? e['image'] ?? '').toString());
+          }
+          return _buildImageUrl(e.toString());
+        })
+        .where((url) => url.isNotEmpty)
         .toList();
   }
 
   Product toDomain() {
+    final baseSelling = sellingPrice ?? price ?? 0.0;
+    final effectivePrice =
+        isOnOffer && (offerPrice ?? 0) > 0 ? offerPrice! : baseSelling;
+    final effectiveOrig = originalPrice ?? (isOnOffer && baseSelling > 0 ? baseSelling : null);
+
+    int? parsedCatId;
+    String? parsedCatName = categoryName;
+    if (categoryId is int) {
+      parsedCatId = categoryId;
+    } else if (categoryId is num) {
+      parsedCatId = (categoryId as num).toInt();
+    } else if (categoryId is Map) {
+      parsedCatId = (categoryId['id'] as num?)?.toInt();
+      parsedCatName ??= categoryId['name']?.toString();
+    }
+
+    final parsedSizes = _parseSizes(sizes);
+    final parsedPortions = _parsePortions(portions);
+    final parsedWeight = double.tryParse(weight ?? '');
+
     return Product(
       id: id,
       title: name ?? '',
-      subtitle: description ?? '',
-      price: isOnOffer ? (offerPrice ?? sellingPrice ?? 0.0) : (sellingPrice ?? 0.0),
-      originalPrice: isOnOffer ? sellingPrice : null,
-      imageUrl: _buildImageUrl(mainImageUrl),
+      titleAr: nameAr,
+      titleEn: nameEn,
+      subtitle: description ?? weight ?? '',
+      description: description,
+      price: effectivePrice,
+      originalPrice: effectiveOrig,
+      offerPrice: offerPrice,
+      isOnOffer: isOnOffer,
+      imageUrl: _buildImageUrl(mainImageUrl ?? imageUrl),
+      discountTag: discountTag,
       isOffer: isOnOffer,
       isBestSeller: isBestSeller,
+      isFeatured: isFeatured,
+      isAvailable: isAvailable,
+      active: active,
+      isCarcass: isCarcass || parsedPortions.isNotEmpty,
+      hasSizes: hasSizes || parsedSizes.isNotEmpty,
+      sizes: parsedSizes,
+      portions: parsedPortions,
+      weightKg: parsedWeight,
+      categoryId: parsedCatId,
+      categoryName: parsedCatName,
+      loyaltyPoints: loyaltyPoints,
       cuttingOptions: _parseOptions(cuttingOptions),
       packagingOptions: _parseOptions(packagingOptions),
       excludedParts: _parseOptions(excludedParts),
+      galleryImages: _parseGalleryImages(images),
     );
   }
-
 
   @override
   List<Object?> get props => [
         id,
         name,
+        nameAr,
+        nameEn,
         description,
+        weight,
         sellingPrice,
+        price,
         offerPrice,
+        originalPrice,
         isOnOffer,
         isBestSeller,
+        isFeatured,
+        isAvailable,
+        active,
+        isCarcass,
+        hasSizes,
         mainImageUrl,
+        imageUrl,
+        discountTag,
+        categoryId,
+        categoryName,
+        loyaltyPoints,
         cuttingOptions,
         packagingOptions,
         excludedParts,
+        sizes,
+        portions,
+        images,
       ];
 }
 

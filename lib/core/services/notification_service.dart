@@ -17,12 +17,16 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  static const String notificationSoundName = 'notification_sound';
+
   static const AndroidNotificationChannel channel = AndroidNotificationChannel(
     'high_importance_channel', // id
     'High Importance Notifications', // name
     description:
         'This channel is used for important notifications.', // description
     importance: Importance.high,
+    playSound: true,
+    sound: RawResourceAndroidNotificationSound(notificationSoundName),
   );
 
   static const AndroidNotificationChannel adminOrderChannel = AndroidNotificationChannel(
@@ -31,6 +35,7 @@ class NotificationService {
     description: 'قناة تنبيهات الطلبات الجديدة وتحديثاتها لإدارة المتجر',
     importance: Importance.max,
     playSound: true,
+    sound: RawResourceAndroidNotificationSound(notificationSoundName),
     enableVibration: true,
   );
 
@@ -70,7 +75,6 @@ class NotificationService {
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         // Handle foreground notification tap here
-        print('Notification clicked with payload: ${response.payload}');
       },
     );
 
@@ -79,6 +83,9 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
+    // Delete existing channels to ensure sound changes take effect on devices where default sound was cached
+    await androidImpl?.deleteNotificationChannel(channelId: channel.id);
+    await androidImpl?.deleteNotificationChannel(channelId: adminOrderChannel.id);
     await androidImpl?.createNotificationChannel(channel);
     await androidImpl?.createNotificationChannel(adminOrderChannel);
 
@@ -97,10 +104,7 @@ class NotificationService {
       await FirebaseMessaging.instance.subscribeToTopic('admin_orders');
       await FirebaseMessaging.instance.subscribeToTopic('orders');
       await FirebaseMessaging.instance.subscribeToTopic('all');
-      print('Subscribed to admin order notification topics successfully.');
-    } catch (e) {
-      print('Error subscribing to admin topics: $e');
-    }
+    } catch (_) {}
   }
 
   Future<String?> _downloadAndSaveFile(String url, String fileName) async {
@@ -114,8 +118,7 @@ class NotificationService {
       final File file = File(filePath);
       await file.writeAsBytes(response.data);
       return filePath;
-    } catch (e) {
-      print('Error downloading image for notification: $e');
+    } catch (_) {
       return null;
     }
   }
@@ -188,6 +191,13 @@ class NotificationService {
             priority: Priority.max,
             enableVibration: true,
             playSound: true,
+            sound: const RawResourceAndroidNotificationSound(notificationSoundName),
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            sound: '$notificationSoundName.wav',
           ),
         ),
         payload: message.data.toString(),
@@ -230,6 +240,13 @@ class NotificationService {
           priority: Priority.high,
           enableVibration: true,
           playSound: true,
+          sound: const RawResourceAndroidNotificationSound(notificationSoundName),
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: '$notificationSoundName.wav',
         ),
       ),
     );

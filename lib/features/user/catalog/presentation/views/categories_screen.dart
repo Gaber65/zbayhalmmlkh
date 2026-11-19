@@ -12,12 +12,24 @@ class CategoriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool hasCatalogCubit = false;
+    try {
+      context.read<CatalogCubit>();
+      hasCatalogCubit = true;
+    } catch (_) {}
+
+    const child = ResponsiveLayout(
+      mobile: CategoriesMobileView(),
+      desktop: CatalogWebView(), // Unified web view, no initial category selected
+    );
+
+    if (hasCatalogCubit) {
+      return child;
+    }
+
     return BlocProvider(
-      create: (context) => getIt<CatalogCubit>()..fetchCategories(),
-      child: const ResponsiveLayout(
-        mobile: CategoriesMobileView(),
-        desktop: CatalogWebView(), // Unified web view, no initial category selected
-      ),
+      create: (context) => getIt<CatalogCubit>()..fetchCatalog(),
+      child: child,
     );
   }
 }

@@ -13,6 +13,11 @@ class CartLineEntity extends Equatable {
   final double priceUnit;
   final double discountPercent;
   final double lineTotal;
+  final int? sizeId;
+  final String? sizeName;
+  final double sizePrice;
+  final double cuttingPrice;
+  final double packagingPrice;
   final ProductOption? cuttingOption;
   final List<ProductOption> packagingOptions;
   final List<ProductOption> excludedParts;
@@ -27,6 +32,11 @@ class CartLineEntity extends Equatable {
     required this.priceUnit,
     this.discountPercent = 0.0,
     required this.lineTotal,
+    this.sizeId,
+    this.sizeName,
+    this.sizePrice = 0.0,
+    this.cuttingPrice = 0.0,
+    this.packagingPrice = 0.0,
     this.cuttingOption,
     this.packagingOptions = const [],
     this.excludedParts = const [],
@@ -42,6 +52,11 @@ class CartLineEntity extends Equatable {
         priceUnit,
         discountPercent,
         lineTotal,
+        sizeId,
+        sizeName,
+        sizePrice,
+        cuttingPrice,
+        packagingPrice,
         cuttingOption,
         packagingOptions,
         excludedParts,

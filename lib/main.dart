@@ -4,7 +4,9 @@
 /// Firebase initialization, dependency injection, push notifications, state management,
 /// and sets up the root widget tree with localizations and routing.
 library;
+import 'package:google_fonts/google_fonts.dart';
 
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -23,6 +25,7 @@ import 'generated/l10n.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'core/services/notification_service.dart';
+import 'features/user/favorites/presentation/manager/favorites_cubit.dart';
 
 /// Top-level background message handler for Firebase Cloud Messaging (FCM).
 ///
@@ -30,7 +33,43 @@ import 'core/services/notification_service.dart';
 /// in an isolated background thread when the app is in the background or terminated.
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Handling a background message ${message.messageId}');
+  debugPrint('Handling a background message ${message.messageId}');
+}
+
+/// Safely initializes FCM and local notifications without blocking app startup
+/// or throwing unhandled exceptions if APNS tokens are unavailable (e.g., iOS sideloading).
+void _setupPushNotifications() {
+  Future.microtask(() async {
+    try {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      await NotificationService().init();
+
+      // On iOS, APNS token must be issued by Apple before querying the FCM token
+      if (!kIsWeb && Platform.isIOS) {
+        final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+        if (apnsToken != null) {
+          final fcmToken = await FirebaseMessaging.instance.getToken();
+          debugPrint('FCM Token: $fcmToken');
+        } else {
+          debugPrint('APNS token not available yet (normal for sideloaded apps)');
+        }
+      } else {
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        debugPrint('FCM Token: $fcmToken');
+      }
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage event) {
+        NotificationService().showNotification(event);
+      });
+      FirebaseMessaging.onMessageOpenedApp.listen((event) {});
+    } catch (e) {
+      debugPrint('Firebase messaging setup warning: $e');
+    }
+  });
 }
 
 /// The main entry point of the Flutter app.
@@ -45,6 +84,9 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 /// 7. Launches [MyApp] wrapped with global BLoC providers.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Font Optimization: Disable HTTP runtime fetching of fonts to prevent jank and network calls
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -63,16 +105,11 @@ void main() async {
   // Initialize dependency injection
   await configureDependencies();
 
-  if (!kIsWeb) {
-    await FirebaseMessaging.instance.requestPermission();
-    await NotificationService().init();
+  // Background message listener registration
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage event) {
-      NotificationService().showNotification(event);
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((event) {});
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  }
+  // Safely initialize push notifications without crashing iOS if APNS token is pending/absent
+  _setupPushNotifications();
 
   runApp(
     MultiBlocProvider(
@@ -80,6 +117,9 @@ void main() async {
         BlocProvider<AppCubit>(create: (context) => getIt<AppCubit>()),
         BlocProvider<AuthCubit>(
           create: (context) => getIt<AuthCubit>()..checkAuthStatus(),
+        ),
+        BlocProvider<FavoritesCubit>(
+          create: (context) => getIt<FavoritesCubit>()..loadFavorites(),
         ),
       ],
       child: const MyApp(),
@@ -139,9 +179,9 @@ class MyApp extends StatelessWidget {
 class AppScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-        PointerDeviceKind.trackpad,
-        PointerDeviceKind.stylus,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
 }

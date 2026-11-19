@@ -1,6 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../features/user/favorites/data/datasources/favorites_local_data_source.dart';
+import '../../features/user/favorites/data/datasources/favorites_remote_data_source.dart';
+import '../../features/user/favorites/data/repositories/favorites_repository_impl.dart';
+import '../../features/user/favorites/domain/repositories/favorites_repository.dart';
+import '../../features/user/favorites/presentation/manager/favorites_cubit.dart';
 import '../../features/admin/data/datasources/admin_remote_data_source.dart';
 import '../../features/admin/data/repositories/admin_repository_impl.dart';
 import '../../features/admin/domain/repositories/admin_repository.dart';
@@ -17,7 +23,6 @@ import '../../features/admin/presentation/manager/admin_branches_cubit.dart';
 import 'injection.config.dart';
 import '../payment/payment_service.dart';
 import '../payment/moyasar_payment_gateway.dart';
-import '../payment/myfatoorah_payment_gateway.dart';
 
 final getIt = GetIt.instance;
 
@@ -30,7 +35,6 @@ Future<void> configureDependencies() async {
   await getIt.init();
   final paymentService = PaymentService();
   paymentService.registerGateway(MoyasarPaymentGateway());
-  paymentService.registerGateway(MyFatoorahPaymentGateway());
   getIt.registerLazySingleton<PaymentService>(() => paymentService);
 
   // ── Register Admin dependencies ──────────────────────────────────────────
@@ -92,6 +96,31 @@ Future<void> configureDependencies() async {
   if (!getIt.isRegistered<AdminBranchesCubit>()) {
     getIt.registerFactory<AdminBranchesCubit>(
       () => AdminBranchesCubit(getIt<AdminRepository>()),
+    );
+  }
+
+  // ── Register Favorites dependencies ─────────────────────────────────────
+  if (!getIt.isRegistered<FavoritesLocalDataSource>()) {
+    getIt.registerLazySingleton<FavoritesLocalDataSource>(
+      () => FavoritesLocalDataSourceImpl(sharedPreferences: getIt<SharedPreferences>()),
+    );
+  }
+  if (!getIt.isRegistered<FavoritesRemoteDataSource>()) {
+    getIt.registerLazySingleton<FavoritesRemoteDataSource>(
+      () => FavoritesRemoteDataSourceImpl(dio: getIt<Dio>()),
+    );
+  }
+  if (!getIt.isRegistered<FavoritesRepository>()) {
+    getIt.registerLazySingleton<FavoritesRepository>(
+      () => FavoritesRepositoryImpl(
+        localDataSource: getIt<FavoritesLocalDataSource>(),
+        remoteDataSource: getIt<FavoritesRemoteDataSource>(),
+      ),
+    );
+  }
+  if (!getIt.isRegistered<FavoritesCubit>()) {
+    getIt.registerLazySingleton<FavoritesCubit>(
+      () => FavoritesCubit(repository: getIt<FavoritesRepository>()),
     );
   }
 }

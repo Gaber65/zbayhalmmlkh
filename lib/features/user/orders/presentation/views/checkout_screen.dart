@@ -6,6 +6,7 @@ import 'package:dhabayih_lmamlaka/core/routes/routes.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
 import 'package:dhabayih_lmamlaka/generated/l10n.dart';
 import 'package:dhabayih_lmamlaka/features/user/cart/domain/entities/cart.dart';
+import 'package:dhabayih_lmamlaka/features/user/cart/presentation/manager/cart_cubit.dart';
 import 'package:dhabayih_lmamlaka/features/user/address/presentation/manager/address_cubit.dart';
 import 'package:dhabayih_lmamlaka/features/user/address/presentation/manager/address_state.dart';
 import 'package:dhabayih_lmamlaka/features/user/address/domain/entities/address_entity.dart';
@@ -14,8 +15,10 @@ import 'package:dhabayih_lmamlaka/features/user/profile/presentation/manager/pro
 import 'package:dhabayih_lmamlaka/features/user/profile/presentation/manager/profile_state.dart';
 import '../manager/checkout_cubit.dart';
 import '../manager/checkout_state.dart';
+import '../../domain/entities/checkout_summary_entity.dart';
 import '../../domain/entities/payment_method_entity.dart';
 import '../../domain/entities/branch_entity.dart';
+import 'widgets/delivery_calendar_widget.dart';
 import 'package:dhabayih_lmamlaka/core/payment/payment_service.dart';
 import 'package:dhabayih_lmamlaka/core/payment/payment_request.dart';
 import 'package:dhabayih_lmamlaka/core/payment/payment_status.dart';
@@ -40,10 +43,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   bool _loadingBranches = false;
   List<PaymentMethodEntity> _paymentMethods = [];
   PaymentMethodEntity? _selectedPaymentMethod;
+  CheckoutSummaryEntity? _checkoutSummary;
+  String? _slaughterDate;
+  String? _slaughterTime;
 
   @override
   void initState() {
     super.initState();
+    final initialDate = DeliveryCalendarWidget.hasAnySlotToday
+        ? DeliveryCalendarWidget.riyadhToday
+        : DeliveryCalendarWidget.riyadhToday.add(const Duration(days: 1));
+    _slaughterDate =
+        '${initialDate.year.toString().padLeft(4, '0')}-${initialDate.month.toString().padLeft(2, '0')}-${initialDate.day.toString().padLeft(2, '0')}';
     _loadFulfillmentSettings();
     _loadBranches();
   }
@@ -115,6 +126,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
+    if (!DeliveryCalendarWidget.isScheduleValid(
+      _slaughterDate,
+      _slaughterTime,
+    )) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'يرجى اختيار تاريخ وفترة الذبح والتجهيز في موعد مستقبلي صالح (توقيت الرياض)',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     context.read<CheckoutCubit>().checkout(
       deliveryType: _isPickup ? 'pickup' : 'address',
       addressId: _isPickup ? null : _selectedAddress?.id,
@@ -124,6 +150,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       notes: _notesController.text.trim(),
       couponCode: _couponController.text.trim(),
       redeemPoints: _redeemPoints,
+      slaughterDate: _slaughterDate,
+      slaughterTime: _slaughterTime,
     );
   }
 
@@ -225,10 +253,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       backgroundColor: AppColors.error,
                     ),
                   );
+                } else if (state is CheckoutSummaryLoaded) {
+                  setState(() {
+                    _checkoutSummary = state.summary;
+                  });
                 } else if (state is CheckoutSuccess) {
                   _dismissLoadingDialog(context);
+                  final isFullyPaidOrZero =
+                      state.result.total <= 0.0 ||
+                      state.result.paymentStatus == 'paid';
                   final provider = _selectedPaymentMethod?.provider;
-                  final isOnline = provider != null &&
+                  final isOnline = !isFullyPaidOrZero &&
+                      provider != null &&
                       provider.isNotEmpty &&
                       provider != 'manual' &&
                       _selectedPaymentMethod?.code != 'cod';
@@ -256,7 +292,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             cubit.verifyPayment(orderId, result.paymentId!);
                           } else if (result.status == AppPaymentStatus.pending) {
                             // User is redirected to external payment gateway (web)
+                          } else if (result.status == AppPaymentStatus.cancelled) {
+                            cubit.cancelOrder(orderId);
                           } else {
+                            if (result.errorMessage != null &&
+                                result.errorMessage!.trim().isNotEmpty &&
+                                currentContext.mounted) {
+                              ScaffoldMessenger.of(currentContext).showSnackBar(
+                                SnackBar(
+                                  content: Text(result.errorMessage!),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
                             _showPaymentFailedDialog(currentContext, orderId, cubit);
                           }
                         });
@@ -280,17 +328,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   );
                 } else if (state is OrderCancelled) {
                   _dismissLoadingDialog(context);
+                  try {
+                    context.read<CartCubit>().fetchCart();
+                  } catch (_) {}
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(state.message),
-                      backgroundColor: AppColors.error,
+                      content: Text(
+                        state.message.isNotEmpty
+                            ? state.message
+                            : 'تم إلغاء الطلب بنجاح؛ سلة مشترياتك محفوظة.',
+                      ),
+                      backgroundColor: Colors.orange,
                     ),
                   );
                 } else if (state is CheckoutInitial) {
                   _dismissLoadingDialog(context);
                 } else if (state is PaymentMethodsLoaded) {
                   setState(() {
-                    _paymentMethods = state.methods;
+                    _paymentMethods = state.methods
+                        .where(
+                          (m) =>
+                              m.code.toLowerCase() == 'moyasar' ||
+                              m.code.toLowerCase() == 'cod',
+                        )
+                        .toList();
                     if (_paymentMethods.isNotEmpty) {
                       _selectedPaymentMethod = _paymentMethods.firstWhere(
                         (m) => m.code == 'cod',
@@ -403,9 +464,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           const SizedBox(height: 16),
                         ],
 
-                        // 3. Delivery Schedule Section
+                        // 3. Slaughter Date & Time Schedule Section
+                        DeliveryCalendarWidget(
+                          onScheduleChanged: (selectedDate, timeSlot) {
+                            final iso =
+                                '${selectedDate.year.toString().padLeft(4, '0')}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+                            if (_slaughterDate != iso ||
+                                _slaughterTime != timeSlot) {
+                              setState(() {
+                                _slaughterDate = iso;
+                                _slaughterTime = timeSlot;
+                              });
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 16),
 
-                        // 4. Payment Method Section (Hardcoded COD)
+                        // 4. Payment Method Section (Moyasar & COD)
                         _buildPaymentMethodSection(s, theme, cs),
                         const SizedBox(height: 16),
 
@@ -494,7 +569,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '31.95 ر.س',
+                        'توصيل مبرد',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: !_isPickup
@@ -954,6 +1029,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               iconColor = Colors.black87;
               brandLogoUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Apple_Pay_logo.svg/200px-Apple_Pay_logo.svg.png';
               break;
+            case 'moyasar':
+              iconData = Icons.credit_card_rounded;
+              iconColor = AppColors.primary;
+              brandLogoUrl = null;
+              break;
             case 'tamara':
               iconData = Icons.calendar_month_rounded;
               iconColor = const Color(0xFF3DCBAB);
@@ -1045,16 +1125,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          method.name,
+                          _getPaymentMethodTitle(method),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: isSelected ? cs.onSurface : cs.onSurface,
                           ),
                         ),
-                        if (method.description.isNotEmpty) ...[
+                        if (_getPaymentMethodSubtitle(method).isNotEmpty) ...[
                           const SizedBox(height: 2),
                           Text(
-                            method.description,
+                            _getPaymentMethodSubtitle(method),
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
@@ -1195,73 +1275,110 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildLoyaltyPointsSection(S s, ThemeData theme, ColorScheme cs) {
     return BlocBuilder<ProfileCubit, ProfileState>(
       builder: (context, state) {
-        if (state is ProfileLoaded) {
-          final points = state.profile.loyaltyPoints;
-          if (points <= 0) return const SizedBox.shrink();
+        final profilePoints =
+            state is ProfileLoaded ? state.profile.loyaltyPoints : 0;
+        final summaryPoints = _checkoutSummary?.availablePoints ?? 0;
+        final points = summaryPoints > 0 ? summaryPoints : profilePoints;
 
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLowest,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.01),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+        final redemptionRate = (_checkoutSummary?.redemptionRate ?? 4.0) > 0
+            ? (_checkoutSummary?.redemptionRate ?? 4.0)
+            : 4.0;
+        final minRedemption = _checkoutSummary?.minRedemption ?? 500;
+        final isEligible = points >= minRedemption;
+        final monetaryValue = points > 0 ? points / redemptionRate : 0.0;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: _redeemPoints && isEligible
+                ? AppColors.primary.withValues(alpha: 0.06)
+                : cs.surfaceContainerLowest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _redeemPoints && isEligible
+                  ? AppColors.primary
+                  : cs.outlineVariant.withValues(alpha: 0.5),
+              width: _redeemPoints && isEligible ? 1.5 : 1.0,
             ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.star_rounded,
-                    color: Colors.amber,
-                    size: 24,
-                  ),
+            boxShadow: [
+              BoxShadow(
+                color: _redeemPoints && isEligible
+                    ? AppColors.primary.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                child: const Icon(
+                  Icons.stars_rounded,
+                  color: AppColors.gold,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'استبدال نقاط الولاء (تسوية النقاط لفلوس)',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    if (points > 0) ...[
                       Text(
-                        s.redeem_points,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                        'لديك $points نقطة (تعادل ${monetaryValue.toStringAsFixed(2)} ${s.sar} خصم مباشر)',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      if (!isEligible) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'الحد الأدنى للاستبدال هو $minRedemption نقطة',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: cs.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ] else ...[
                       Text(
-                        s.available_points(points),
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                        'رصيدك الحالي: 0 نقطة (الحد الأدنى للاستبدال: $minRedemption نقطة)',
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
-                Switch.adaptive(
-                  value: _redeemPoints,
-                  activeColor: AppColors.primary,
-                  onChanged: (val) {
-                    setState(() {
-                      _redeemPoints = val;
-                    });
-                  },
-                ),
-              ],
-            ),
-          );
-        }
-        return const SizedBox.shrink();
+              ),
+              Switch.adaptive(
+                value: _redeemPoints && isEligible,
+                activeTrackColor: AppColors.primary,
+                onChanged: isEligible
+                    ? (val) {
+                        setState(() {
+                          _redeemPoints = val;
+                        });
+                      }
+                    : null,
+              ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -1333,32 +1450,64 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           double.infinity,
         );
         double discount = 0.0;
-        double shipping = _isPickup ? 0.0 : 31.95; // Default fallback
-        double total = widget.cart.total;
 
         if (state is CheckoutSummaryLoaded) {
           subtotal = (state.summary.orderSummary['subtotal'] ?? subtotal)
               .toDouble();
           discount = (state.summary.orderSummary['discount'] ?? discount)
               .toDouble();
-          shipping = _isPickup
-              ? 0.0
-              : (state.summary.orderSummary['shipping_cost'] ?? shipping)
-                    .toDouble();
-          total = subtotal - discount + shipping + tax;
-        } else {
-          total = subtotal - discount + shipping + tax;
+        } else if (_checkoutSummary != null) {
+          subtotal = (_checkoutSummary!.orderSummary['subtotal'] ?? subtotal)
+              .toDouble();
+          discount = (_checkoutSummary!.orderSummary['discount'] ?? discount)
+              .toDouble();
         }
+
+        // Loyalty redemption calculation
+        int availablePoints = _checkoutSummary?.availablePoints ?? 0;
+        if (availablePoints <= 0) {
+          try {
+            final pState = context.watch<ProfileCubit>().state;
+            if (pState is ProfileLoaded) {
+              availablePoints = pState.profile.loyaltyPoints;
+            }
+          } catch (_) {}
+        }
+        final redemptionRate = (_checkoutSummary?.redemptionRate ?? 10.0) > 0
+            ? (_checkoutSummary?.redemptionRate ?? 10.0)
+            : 10.0;
+        final minRedemption = _checkoutSummary?.minRedemption ?? 100;
+        final maxOrderPayable = (subtotal - discount + tax).clamp(
+          0.0,
+          double.infinity,
+        );
+        double loyaltyDiscount = 0.0;
+        int pointsUsed = 0;
+        if (_redeemPoints && availablePoints >= minRedemption && maxOrderPayable > 0) {
+          final maxSarFromPoints = availablePoints / redemptionRate;
+          loyaltyDiscount = maxSarFromPoints > maxOrderPayable
+              ? maxOrderPayable
+              : maxSarFromPoints;
+          pointsUsed = (loyaltyDiscount * redemptionRate).round().clamp(
+            0,
+            availablePoints,
+          );
+        }
+
+        final double total = (subtotal - discount - loyaltyDiscount + tax).clamp(
+          0.0,
+          double.infinity,
+        );
 
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: cs.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -1380,11 +1529,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 theme,
                 cs,
               ),
-              if (!_isPickup) ...[
+              if (_slaughterDate != null && _slaughterTime != null) ...[
                 const SizedBox(height: 8),
                 _buildSummaryRow(
-                  'رسوم التوصيل',
-                  '${shipping.toStringAsFixed(2)} ${s.sar}',
+                  'موعد الذبح والتجهيز',
+                  '$_slaughterDate • $_slaughterTime',
                   theme,
                   cs,
                 ),
@@ -1394,6 +1543,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 _buildSummaryRow(
                   'الخصم',
                   '-${discount.toStringAsFixed(2)} ${s.sar}',
+                  theme,
+                  cs,
+                ),
+              ],
+              if (loyaltyDiscount > 0) ...[
+                const SizedBox(height: 8),
+                _buildSummaryRow(
+                  'خصم نقاط الولاء ($pointsUsed نقطة)',
+                  '-${loyaltyDiscount.toStringAsFixed(2)} ${s.sar}',
                   theme,
                   cs,
                 ),
@@ -1461,33 +1619,108 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Widget _buildOrderActionBar(S s, ThemeData theme, ColorScheme cs) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
         color: cs.surface,
         border: Border(
-          top: BorderSide(color: cs.outlineVariant.withOpacity(0.3)),
+          top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3)),
         ),
       ),
-      child: Builder(
-        builder: (context) {
-          return ElevatedButton(
-            onPressed: () => _confirmAndPlaceOrder(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: cs.primary,
-              foregroundColor: cs.onPrimary,
-              minimumSize: const Size.fromHeight(54),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: GestureDetector(
+              onTap: () => context.push(Routes.privacyPolicy),
+              child: Text.rich(
+                TextSpan(
+                  text: 'بالضغط على تأكيد الطلب، فإنك توافق على ',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: cs.onSurface.withValues(alpha: 0.65),
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'الشروط والأحكام وسياسة الخصوصية',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: cs.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
               ),
-              elevation: 0,
             ),
-            child: Text(
-              s.confirm_order,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          );
-        },
+          ),
+          Builder(
+            builder: (context) {
+              return ElevatedButton(
+                onPressed: () => _confirmAndPlaceOrder(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary,
+                  foregroundColor: cs.onPrimary,
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  s.confirm_order,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: cs.onPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
+  }
+
+  String _getPaymentMethodTitle(PaymentMethodEntity method) {
+    switch (method.code.toLowerCase()) {
+      case 'cod':
+        return 'الدفع عند الاستلام (كاش)';
+      case 'moyasar':
+        return 'الدفع الإلكتروني (ميسر) - مدى، فيزا، Apple Pay';
+      case 'mada':
+        return 'بطاقة مدى (Mada)';
+      case 'apple_pay':
+        return 'Apple Pay';
+      case 'stc_pay':
+        return 'STC Pay';
+      case 'card':
+      case 'visa':
+      case 'mastercard':
+        return 'بطاقة ائتمانية (Visa / Mastercard)';
+      default:
+        if (method.name.trim().toLowerCase() == 'cash on delivery') {
+          return 'الدفع عند الاستلام (كاش)';
+        }
+        return method.name;
+    }
+  }
+
+  String _getPaymentMethodSubtitle(PaymentMethodEntity method) {
+    if (method.description.isNotEmpty &&
+        method.description.trim() != method.name.trim()) {
+      return method.description;
+    }
+    switch (method.code.toLowerCase()) {
+      case 'cod':
+        return 'الدفع نقداً أو عبر جهاز الشبكة عند وصول المندوب';
+      case 'moyasar':
+        return 'دفع فوري آمن ومباشر عبر بوابة ميسر المعتمدة';
+      default:
+        return '';
+    }
   }
 }

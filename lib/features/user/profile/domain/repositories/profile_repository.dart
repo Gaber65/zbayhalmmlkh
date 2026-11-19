@@ -11,4 +11,5 @@ abstract class ProfileRepository {
     String? preferredTheme,
     bool? pushNotificationsEnabled,
   });
+  Future<Either<Failure, void>> deleteAccount();
 }

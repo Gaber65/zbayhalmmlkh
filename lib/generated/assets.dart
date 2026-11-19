@@ -16,7 +16,7 @@ class $AssetsImagesGen {
   const $AssetsImagesGen();
 
   final AssetGenImage appLogo = const AssetGenImage(
-    'assets/images/app_logo.png',
+    'assets/images/app_logo.webp',
   );
   final SvgGenImage flutterForgeLogo = const SvgGenImage(
     'assets/images/flutter_forge_logo.svg',

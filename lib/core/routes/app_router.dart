@@ -16,19 +16,23 @@ import '../../features/shared/auth/domain/entities/user_type.dart';
 import '../../features/user/home/presentation/views/home_screen.dart';
 import '../../features/user/product/views/product_details_screen.dart';
 import '../../features/user/cart/views/cart_screen.dart';
+import '../../features/user/cart/presentation/manager/cart_cubit.dart';
 import '../../features/user/catalog/presentation/views/categories_screen.dart';
 import '../../features/user/catalog/presentation/views/products_by_category_screen.dart';
 import '../../features/user/catalog/domain/entities/category.dart';
+import '../../features/user/catalog/domain/entities/product.dart';
+import '../../features/user/catalog/presentation/views/carcass_portions_screen.dart';
 import '../../features/user/search/presentation/views/search_screen.dart';
+import '../../features/user/favorites/presentation/views/favorites_screen.dart';
 import '../../features/user/offers/domain/entities/offer_entity.dart';
 import '../../features/user/offers/presentation/views/offer_details_screen.dart';
 import '../../features/user/profile/presentation/views/profile_screen.dart';
+import '../../features/user/profile/presentation/views/privacy_policy_screen.dart';
 import '../../features/user/address/presentation/views/addresses_screen.dart';
 import '../../features/user/address/presentation/views/map_picker_screen.dart';
 import '../../features/user/address/presentation/views/address_form_screen.dart';
 import '../../features/user/address/presentation/manager/address_cubit.dart';
 import '../../features/user/orders/presentation/views/checkout_screen.dart';
-import '../../features/user/orders/presentation/manager/checkout_cubit.dart';
 import '../../features/user/orders/presentation/views/order_success_screen.dart';
 import '../../features/user/orders/presentation/views/orders_screen.dart';
 import '../../features/user/orders/presentation/views/order_details_screen.dart';
@@ -114,6 +118,13 @@ class AppRouter {
         },
       ),
       GoRoute(
+        path: Routes.carcassPortions,
+        builder: (context, state) {
+          final product = state.extra as Product;
+          return CarcassPortionsScreen(product: product);
+        },
+      ),
+      GoRoute(
         path: Routes.productsByCategory,
         builder: (context, state) {
           final category = state.extra as Category;
@@ -123,6 +134,10 @@ class AppRouter {
       GoRoute(
         path: Routes.search,
         builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: Routes.favorites,
+        builder: (context, state) => const FavoritesScreen(),
       ),
       GoRoute(
         path: Routes.offerDetails,
@@ -179,7 +194,10 @@ class AppRouter {
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
-          return MainNavigationShell(child: child);
+          return BlocProvider.value(
+            value: getIt<CartCubit>(),
+            child: MainNavigationShell(child: child),
+          );
         },
         routes: [
           GoRoute(
@@ -203,6 +221,11 @@ class AppRouter {
             builder: (context, state) => const ProfileScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: Routes.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
     ],
   );

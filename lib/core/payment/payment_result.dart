@@ -5,7 +5,7 @@ class PaymentResult {
   final String? paymentId;
   final String? errorMessage;
 
-  PaymentResult({
+  const PaymentResult({
     required this.status,
     this.paymentId,
     this.errorMessage,
