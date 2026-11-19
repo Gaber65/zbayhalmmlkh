@@ -250,7 +250,7 @@ class ProfileWebView extends StatelessWidget {
               width: double.infinity,
               child: TextButton.icon(
                 onPressed: () => showDeleteAccountConfirmationDialog(context),
-                icon: Icon(Icons.delete_forever_outlined, color: colorScheme.error),
+                icon: Icon(Icons.delete_outline, color: colorScheme.error),
                 label: Text(
                   S.of(context).delete_account,
                   style: theme.textTheme.titleSmall?.copyWith(color: colorScheme.error),

@@ -14,7 +14,7 @@ Future<void> showDeleteAccountConfirmationDialog(BuildContext context) async {
     context: context,
     builder: (dialogContext) => AlertDialog(
       icon: Icon(
-        Icons.delete_forever_outlined,
+        Icons.delete_outline,
         color: colorScheme.error,
         size: 32,
       ),
