@@ -105,8 +105,6 @@ class AuthRemoteDataSourceImpl with DioErrorHandler implements AuthRemoteDataSou
           'device_type': deviceType,
         },
       );
-    } catch (e) {
-      print('Failed to register device FCM token: $e');
-    }
+    } catch (_) {}
   }
 }

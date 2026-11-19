@@ -75,7 +75,6 @@ class NotificationService {
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         // Handle foreground notification tap here
-        print('Notification clicked with payload: ${response.payload}');
       },
     );
 
@@ -105,10 +104,7 @@ class NotificationService {
       await FirebaseMessaging.instance.subscribeToTopic('admin_orders');
       await FirebaseMessaging.instance.subscribeToTopic('orders');
       await FirebaseMessaging.instance.subscribeToTopic('all');
-      print('Subscribed to admin order notification topics successfully.');
-    } catch (e) {
-      print('Error subscribing to admin topics: $e');
-    }
+    } catch (_) {}
   }
 
   Future<String?> _downloadAndSaveFile(String url, String fileName) async {
@@ -122,8 +118,7 @@ class NotificationService {
       final File file = File(filePath);
       await file.writeAsBytes(response.data);
       return filePath;
-    } catch (e) {
-      print('Error downloading image for notification: $e');
+    } catch (_) {
       return null;
     }
   }

@@ -16,6 +16,7 @@ import 'package:dhabayih_lmamlaka/features/shared/auth/domain/entities/user_type
 import 'package:dhabayih_lmamlaka/features/shared/auth/presentation/manager/auth_state.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../edit_profile_bottom_sheet.dart';
+import '../delete_account_dialog.dart';
 import 'profile_highlights_strip.dart';
 import 'profile_avatar_highlight.dart';
 
@@ -515,6 +516,28 @@ class ProfileMobileView extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: OutlinedButton.icon(
+              onPressed: () => showDeleteAccountConfirmationDialog(context),
+              icon: Icon(Icons.delete_forever_outlined, color: colorScheme.error),
+              label: Text(
+                S.of(context).delete_account,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+                side: BorderSide(color: colorScheme.error.withValues(alpha: 0.4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
                 ),
               ),
             ),

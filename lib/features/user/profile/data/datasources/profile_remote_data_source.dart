@@ -14,6 +14,7 @@ abstract class ProfileRemoteDataSource {
     String? preferredTheme,
     bool? pushNotificationsEnabled,
   });
+  Future<void> deleteAccount();
 }
 
 @LazySingleton(as: ProfileRemoteDataSource)
@@ -70,6 +71,20 @@ class ProfileRemoteDataSourceImpl with DioErrorHandler implements ProfileRemoteD
         final dynamic responseData = response.data['data'] ?? response.data;
         return UserProfileModel.fromJson(responseData as Map<String, dynamic>);
       } else {
+        throw ServerException(
+          errorMessageModel: ErrorMessageModel.fromJson(response.data ?? {}),
+        );
+      }
+    } on DioException catch (e) {
+      throw handleDioError(e);
+    }
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      final response = await dio.delete(ServerStrings.deleteAccount);
+      if (response.statusCode != 200) {
         throw ServerException(
           errorMessageModel: ErrorMessageModel.fromJson(response.data ?? {}),
         );

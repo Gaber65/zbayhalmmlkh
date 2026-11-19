@@ -262,6 +262,19 @@ class MessageLookup extends MessageLookupByLibrary {
       "Riyadh, KSA",
     ),
     "delete": MessageLookupByLibrary.simpleMessage("Delete"),
+    "delete_account": MessageLookupByLibrary.simpleMessage("Delete Account"),
+    "delete_account_confirm_button": MessageLookupByLibrary.simpleMessage(
+      "Yes, Delete Account",
+    ),
+    "delete_account_confirm_message": MessageLookupByLibrary.simpleMessage(
+      "Are you sure you want to delete your account? Your personal data and saved addresses will be permanently removed and this action cannot be undone.",
+    ),
+    "delete_account_confirm_title": MessageLookupByLibrary.simpleMessage(
+      "Delete Account Permanently",
+    ),
+    "delete_account_success": MessageLookupByLibrary.simpleMessage(
+      "Your account has been deleted successfully",
+    ),
     "delivery_fee": MessageLookupByLibrary.simpleMessage("Delivery Fee"),
     "delivery_schedule": MessageLookupByLibrary.simpleMessage(
       "Delivery Schedule",

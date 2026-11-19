@@ -16,6 +16,7 @@ import '../../features/shared/auth/domain/entities/user_type.dart';
 import '../../features/user/home/presentation/views/home_screen.dart';
 import '../../features/user/product/views/product_details_screen.dart';
 import '../../features/user/cart/views/cart_screen.dart';
+import '../../features/user/cart/presentation/manager/cart_cubit.dart';
 import '../../features/user/catalog/presentation/views/categories_screen.dart';
 import '../../features/user/catalog/presentation/views/products_by_category_screen.dart';
 import '../../features/user/catalog/domain/entities/category.dart';
@@ -193,7 +194,10 @@ class AppRouter {
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
-          return MainNavigationShell(child: child);
+          return BlocProvider.value(
+            value: getIt<CartCubit>(),
+            child: MainNavigationShell(child: child),
+          );
         },
         routes: [
           GoRoute(

@@ -208,14 +208,14 @@ class FavoritesScreen extends StatelessWidget {
                             context.read<FavoritesCubit>().removeFavorite(fav.id);
                           },
                           onAddToCart: () {
-                            if (prod.isCarcass || prod.effectivePortions.isNotEmpty) {
+                            if (prod.isCarcass && prod.effectivePortions.length > 1) {
                               context.push(Routes.carcassPortions, extra: prod);
                             } else {
                               context.push(Routes.productDetails, extra: prod);
                             }
                           },
                           onTap: () {
-                            if (prod.isCarcass || prod.effectivePortions.isNotEmpty) {
+                            if (prod.isCarcass && prod.effectivePortions.length > 1) {
                               context.push(Routes.carcassPortions, extra: prod);
                             } else {
                               context.push(Routes.productDetails, extra: prod);

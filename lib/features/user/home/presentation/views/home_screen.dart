@@ -62,6 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final RefreshController _refreshController = RefreshController(
     initialRefresh: false,
   );
+  final RefreshController _errorRefreshController = RefreshController(
+    initialRefresh: false,
+  );
   String? _selectedLocationOverride;
   String _fulfillmentMode = 'delivery';
   final Set<int> _viewedStoryUserIds = {};
@@ -85,7 +88,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _refreshController.dispose();
+    _errorRefreshController.dispose();
     super.dispose();
+  }
+
+  void _completeRefresh() {
+    _refreshController.refreshCompleted();
+    _refreshController.loadComplete();
+    _errorRefreshController.refreshCompleted();
+    _errorRefreshController.loadComplete();
   }
 
   Future<void> _fetchLiveUserPointsAndBalance() async {
@@ -224,7 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<HomeCubit>().fetchHomeData(),
       _fetchLiveUserPointsAndBalance(),
     ]);
-    _refreshController.refreshCompleted();
+    _completeRefresh();
   }
 
   void _openAddressSelectionBottomSheet(
@@ -333,8 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Widget content = BlocConsumer<HomeCubit, HomeState>(
       listener: (context, state) {
         if (state is HomeLoaded || state is HomeError) {
-          _refreshController.refreshCompleted();
-          _refreshController.loadComplete();
+          _completeRefresh();
         }
       },
       builder: (context, state) {
@@ -346,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return Scaffold(
             backgroundColor: isMobile ? p.paper : Theme.of(context).colorScheme.surface,
             body: SmartRefresher(
-              controller: _refreshController,
+              controller: _errorRefreshController,
               enablePullDown: !kIsWeb,
               header: WaterDropMaterialHeader(
                 backgroundColor: p.red,
@@ -781,7 +791,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onProductDetailTap(BuildContext context, Product product) {
-    if (product.isCarcass || product.effectivePortions.isNotEmpty) {
+    if (product.isCarcass && product.effectivePortions.length > 1) {
       context.push(Routes.carcassPortions, extra: product);
     } else {
       context.push(Routes.productDetails, extra: product);
@@ -838,8 +848,21 @@ class _HomeScreenState extends State<HomeScreen> {
       isAuthenticated = context.read<AuthCubit>().state is AuthAuthenticated;
     } catch (_) {}
 
+    if (!isAuthenticated) {
+      _showKingdomToast(
+        context,
+        kTr(
+          context,
+          'يرجى تسجيل الدخول أولاً لإضافة المنتجات إلى السلة',
+          'Please login first to add items to cart',
+        ),
+      );
+      context.push(Routes.login);
+      return;
+    }
+
     final cartCubit = _resolveCartCubit(context);
-    if (isAuthenticated && cartCubit != null) {
+    if (cartCubit != null) {
       cartCubit.addToCart(
         productId: product.id,
         quantity: quantity,
@@ -850,23 +873,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return;
     }
-
-    setState(() {
-      _localCartLineCountOverride = (_localCartLineCountOverride ??
-              (context.read<HomeCubit>().state is HomeLoaded
-                  ? (context.read<HomeCubit>().state as HomeLoaded)
-                          .homeData
-                          .userHighlight
-                          ?.activeCart
-                          ?.lineCount ??
-                      0
-                  : 0)) +
-          1;
-    });
-    _showKingdomToast(
-      context,
-      kTr(context, 'تمت الإضافة إلى سلتك', 'Added to your cart'),
-    );
   }
 
   Widget _buildErrorState(BuildContext context, String message) {

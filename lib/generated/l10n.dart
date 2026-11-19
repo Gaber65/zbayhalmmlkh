@@ -2518,6 +2518,56 @@ class S {
   String get custom_date {
     return Intl.message('Choose Date', name: 'custom_date', desc: '', args: []);
   }
+
+  /// `Delete Account`
+  String get delete_account {
+    return Intl.message(
+      'Delete Account',
+      name: 'delete_account',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Delete Account Permanently`
+  String get delete_account_confirm_title {
+    return Intl.message(
+      'Delete Account Permanently',
+      name: 'delete_account_confirm_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to delete your account? Your personal data and saved addresses will be permanently removed and this action cannot be undone.`
+  String get delete_account_confirm_message {
+    return Intl.message(
+      'Are you sure you want to delete your account? Your personal data and saved addresses will be permanently removed and this action cannot be undone.',
+      name: 'delete_account_confirm_message',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Yes, Delete Account`
+  String get delete_account_confirm_button {
+    return Intl.message(
+      'Yes, Delete Account',
+      name: 'delete_account_confirm_button',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your account has been deleted successfully`
+  String get delete_account_success {
+    return Intl.message(
+      'Your account has been deleted successfully',
+      name: 'delete_account_success',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

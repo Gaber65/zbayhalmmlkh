@@ -35,6 +35,30 @@ class _ProductsByCategoryMobileViewState
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _sortBy = 'default';
+  String _selectedSubCategory = 'الكل';
+
+  static const List<String> _bbqSubcategories = [
+    'الكل',
+    'مجهز للشواء',
+    'برجر طازج',
+    'مشاوي مشكلة',
+    'ستيكات فاخرة',
+    'دجاج متبل وبرجر وشاورما',
+    'كفتة وكبة لحم',
+    'شاورما لحم',
+    'مُقبلات',
+  ];
+
+  static const Map<String, List<int>> _bbqSubcategoryMap = {
+    'شاورما لحم': [170, 188, 192, 198, 199],
+    'مُقبلات': [171, 185, 186],
+    'كفتة وكبة لحم': [172, 179, 180, 183, 190, 194, 201],
+    'مشاوي مشكلة': [173, 175, 187, 189, 191],
+    'برجر طازج': [174, 178, 181, 182, 184],
+    'دجاج متبل وبرجر وشاورما': [176, 177, 193, 195, 196, 197, 200, 202, 203],
+    'ستيكات فاخرة': [204, 205, 206, 207, 211],
+    'مجهز للشواء': [208, 209, 210],
+  };
 
   @override
   void dispose() {
@@ -84,7 +108,7 @@ class _ProductsByCategoryMobileViewState
   }
 
   void _onProductTap(BuildContext context, Product product) {
-    if (product.isCarcass || product.effectivePortions.isNotEmpty) {
+    if (product.isCarcass && product.effectivePortions.length > 1) {
       context.push(Routes.carcassPortions, extra: product);
     } else {
       context.push(Routes.productDetails, extra: product);
@@ -137,8 +161,21 @@ class _ProductsByCategoryMobileViewState
       isAuthenticated = context.read<AuthCubit>().state is AuthAuthenticated;
     } catch (_) {}
 
+    if (!isAuthenticated) {
+      _showKingdomToast(
+        context,
+        kTr(
+          context,
+          'يرجى تسجيل الدخول أولاً لإضافة المنتجات إلى السلة',
+          'Please login first to add items to cart',
+        ),
+      );
+      context.push(Routes.login);
+      return;
+    }
+
     final cartCubit = _resolveCartCubit(context);
-    if (isAuthenticated && cartCubit != null) {
+    if (cartCubit != null) {
       cartCubit.addToCart(
         productId: product.id,
         quantity: quantity,
@@ -154,9 +191,46 @@ class _ProductsByCategoryMobileViewState
     );
   }
 
+  bool _matchesSubcategory(Product p, String subcategory) {
+    if (subcategory == 'الكل') return true;
+
+    final subIds = _bbqSubcategoryMap[subcategory];
+    if (subIds != null && subIds.contains(p.id)) return true;
+
+    // Keyword fallback
+    final title = '${p.title} ${p.subtitle} ${p.description ?? ''}'.toLowerCase();
+    switch (subcategory) {
+      case 'ستيكات فاخرة':
+        return title.contains('ستيك');
+      case 'برجر طازج':
+        return (title.contains('برجر') || title.contains('برغر')) && !title.contains('دجاج');
+      case 'شاورما لحم':
+        return title.contains('شاورما') && !title.contains('دجاج');
+      case 'دجاج متبل وبرجر وشاورما':
+        return title.contains('دجاج');
+      case 'كفتة وكبة لحم':
+        return title.contains('كفتة') || title.contains('كبة') || title.contains('كرات لحم');
+      case 'مجهز للشواء':
+        return title.contains('مجهز للشواء');
+      case 'مشاوي مشكلة':
+        return title.contains('مشكل') || title.contains('مشاوي') || title.contains('ريش');
+      case 'مُقبلات':
+      case 'مقبلات':
+        return title.contains('متبل') || title.contains('حمص') || title.contains('طحينة') || title.contains('سلطة');
+      default:
+        return true;
+    }
+  }
+
   List<Product> _filterAndSort(BuildContext context, List<Product> raw) {
-    final query = _searchQuery.trim().toLowerCase();
     Iterable<Product> list = raw;
+
+    // BBQ Subcategory filter
+    if (_selectedSubCategory != 'الكل') {
+      list = list.where((p) => _matchesSubcategory(p, _selectedSubCategory));
+    }
+
+    final query = _searchQuery.trim().toLowerCase();
     if (query.isNotEmpty) {
       list = list.where((p) {
         final hay = [
@@ -180,6 +254,62 @@ class _ProductsByCategoryMobileViewState
         break;
     }
     return result;
+  }
+
+  Widget _buildSubcategoryFilterBar(KPalette p) {
+    return Container(
+      height: 42,
+      margin: const EdgeInsets.only(bottom: 14),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        physics: const BouncingScrollPhysics(),
+        itemCount: _bbqSubcategories.length,
+        separatorBuilder: (_, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final sub = _bbqSubcategories[index];
+          final isSelected = _selectedSubCategory == sub;
+          return InkWell(
+            onTap: () {
+              setState(() {
+                _selectedSubCategory = sub;
+              });
+            },
+            borderRadius: BorderRadius.circular(21),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF7D162B) : p.card,
+                borderRadius: BorderRadius.circular(21),
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF7D162B) : p.line,
+                  width: 1.2,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF7D162B).withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                sub,
+                style: kText(
+                  13,
+                  weight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  color: isSelected ? Colors.white : p.ink,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -269,6 +399,9 @@ class _ProductsByCategoryMobileViewState
                       ? state.products
                       : (state as CatalogLoaded).products;
                   final products = _filterAndSort(context, rawProducts);
+                  final isBbqCategory = widget.category.id == 34 ||
+                      widget.category.name.contains('مشاوي') ||
+                      widget.category.name.toLowerCase().contains('bbq');
 
                   return RefreshIndicator(
                     color: p.red,
@@ -314,6 +447,7 @@ class _ProductsByCategoryMobileViewState
                               ],
                             ),
                           ),
+                          if (isBbqCategory) _buildSubcategoryFilterBar(p),
                           if (products.isEmpty)
                             Padding(
                               padding: const EdgeInsets.symmetric(

@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../../../../../../core/config/app_config.dart';
@@ -215,8 +214,8 @@ String kTr(BuildContext context, String ar, String en) =>
 /// Currency label (`ر.س` in Arabic, `SAR` in English).
 String kCurrency(BuildContext context) => kTr(context, 'ر.س', 'SAR');
 
-/// Font family registered and unified with Web (Cairo Arabic Font).
-String get kFontFamily => GoogleFonts.cairo().fontFamily ?? 'IBMPlexSansArabic';
+/// Bundled local font family (IBMPlexSansArabic) to avoid runtime fetches and errors.
+const String kFontFamily = 'IBMPlexSansArabic';
 
 /// Builds a text style using the design font.
 TextStyle kText(

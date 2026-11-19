@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dhabayih_lmamlaka/core/theme/colors.dart';
+import 'package:dhabayih_lmamlaka/core/theme/typography.dart';
 
 class PrivacyPolicyScreen extends StatefulWidget {
   const PrivacyPolicyScreen({super.key});
@@ -80,7 +80,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         ),
         title: Text(
           'الخصوصية والشروط والأحكام',
-          style: GoogleFonts.cairo(
+          style: TextStyle(fontFamily: AppTypography.fontFamily, 
             fontWeight: FontWeight.bold,
             fontSize: 16,
             color: isDark ? Colors.white : AppColors.brandDark,
@@ -180,7 +180,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                     const SizedBox(width: 5),
                     Text(
                       'وثيقة تنظيمية معتمدة 2026',
-                      style: GoogleFonts.cairo(
+                      style: TextStyle(fontFamily: AppTypography.fontFamily, 
                         color: AppColors.goldLight,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -195,7 +195,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
           const SizedBox(height: 12),
           Text(
             'ميثاق الخصوصية والاشتراطات الصحية لذبائح المملكة',
-            style: GoogleFonts.cairo(
+            style: TextStyle(fontFamily: AppTypography.fontFamily, 
               color: Colors.white,
               fontSize: 17,
               fontWeight: FontWeight.bold,
@@ -205,7 +205,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
           const SizedBox(height: 6),
           Text(
             'نلتزم بحماية بياناتك الشخصية وضمان ذبح حلال 100% بإشراف بيطري وتوصيل مبرد وفق اللوائح السعودية.',
-            style: GoogleFonts.cairo(
+            style: TextStyle(fontFamily: AppTypography.fontFamily, 
               color: Colors.white70,
               fontSize: 12,
               height: 1.45,
@@ -233,7 +233,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
       ),
       child: Text(
         text,
-        style: GoogleFonts.cairo(
+        style: TextStyle(fontFamily: AppTypography.fontFamily, 
           color: Colors.white60,
           fontSize: 10,
           fontWeight: FontWeight.w600,
@@ -308,7 +308,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
           const SizedBox(height: 6),
           Text(
             title,
-            style: GoogleFonts.cairo(
+            style: TextStyle(fontFamily: AppTypography.fontFamily, 
               fontSize: 11,
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -319,7 +319,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
           ),
           Text(
             subtitle,
-            style: GoogleFonts.cairo(
+            style: TextStyle(fontFamily: AppTypography.fontFamily, 
               fontSize: 9,
               color: isDark ? Colors.white54 : const Color(0xFF64748B),
             ),
@@ -383,7 +383,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               Flexible(
                 child: Text(
                   title,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(fontFamily: AppTypography.fontFamily, 
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: isSelected ? Colors.white : const Color(0xFF64748B),
@@ -510,7 +510,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 title: Text(
                   faq['q']!,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(fontFamily: AppTypography.fontFamily, 
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -532,7 +532,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                   alignment: Alignment.centerRight,
                   child: Text(
                     faq['a']!,
-                    style: GoogleFonts.cairo(
+                    style: TextStyle(fontFamily: AppTypography.fontFamily, 
                       fontSize: 12,
                       color: isDark ? Colors.white70 : const Color(0xFF475569),
                       height: 1.5,
@@ -578,7 +578,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                 alignment: Alignment.center,
                 child: Text(
                   '2',
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(fontFamily: AppTypography.fontFamily, 
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
@@ -588,7 +588,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               const SizedBox(width: 10),
               Text(
                 'جدول الأوزان التقريبية والتفاوت المقبول',
-                style: GoogleFonts.cairo(
+                style: TextStyle(fontFamily: AppTypography.fontFamily, 
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -636,7 +636,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       child: Text(
         text,
-        style: GoogleFonts.cairo(
+        style: TextStyle(fontFamily: AppTypography.fontFamily, 
           fontSize: 11,
           fontWeight: isHeader || isHighlight ? FontWeight.bold : FontWeight.normal,
           color: isHighlight
@@ -681,7 +681,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                 alignment: Alignment.center,
                 child: Text(
                   number,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(fontFamily: AppTypography.fontFamily, 
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: activeColor,
@@ -692,7 +692,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.cairo(
+                  style: TextStyle(fontFamily: AppTypography.fontFamily, 
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -721,7 +721,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                   Expanded(
                     child: Text(
                       b,
-                      style: GoogleFonts.cairo(
+                      style: TextStyle(fontFamily: AppTypography.fontFamily, 
                         fontSize: 12,
                         color: isDark ? Colors.white70 : const Color(0xFF475569),
                         height: 1.45,
@@ -754,7 +754,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               const SizedBox(width: 8),
               Text(
                 'الجهة المسؤولة والمشغلة للمنصة',
-                style: GoogleFonts.cairo(
+                style: TextStyle(fontFamily: AppTypography.fontFamily, 
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -765,7 +765,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
           const SizedBox(height: 8),
           Text(
             'منصة ذبائح المملكة مسجلة رسميـاً بموجب سجل تجاري رقم 1010000000 ورقم ضريبي معتمد لدى هيئة الزكاة والضريبة والجمارك 300000000000003 وتخضع للرقابة الصحية للجهات المختصة.',
-            style: GoogleFonts.cairo(
+            style: TextStyle(fontFamily: AppTypography.fontFamily, 
               fontSize: 11,
               color: isDark ? Colors.white60 : const Color(0xFF64748B),
               height: 1.4,
@@ -799,7 +799,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               icon: const Icon(Icons.chat_rounded, size: 16),
               label: Text(
                 'تواصل عبر واتساب',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12),
+                style: TextStyle(fontFamily: AppTypography.fontFamily, fontWeight: FontWeight.bold, fontSize: 12),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF25D366),
@@ -817,7 +817,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               icon: const Icon(Icons.phone_rounded, size: 16),
               label: Text(
                 'اتصال بالدعم',
-                style: GoogleFonts.cairo(fontWeight: FontWeight.bold, fontSize: 12),
+                style: TextStyle(fontFamily: AppTypography.fontFamily, fontWeight: FontWeight.bold, fontSize: 12),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: isDark ? Colors.white : AppColors.brandDark,

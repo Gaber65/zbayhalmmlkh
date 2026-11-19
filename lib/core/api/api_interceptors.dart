@@ -12,47 +12,8 @@ import '../../features/shared/auth/presentation/manager/auth_cubit.dart';
 
 /// API Interceptor for handling requests, responses, and errors
 /// Provides centralized logging and error handling
-class ApiInterceptor extends Interceptor {
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Log request details
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print('📤 REQUEST[${options.method}] => URL: ${options.baseUrl}${options.path}');
-    print('Headers: ${options.headers}');
-    print('Query Parameters: ${options.queryParameters}');
-    print('Body: ${options.data}');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    super.onRequest(options, handler);
-  }
-
-  @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    // Log response details
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print(
-      '📥 RESPONSE[${response.statusCode}] => URL: ${response.requestOptions.baseUrl}${response.requestOptions.path}',
-    );
-    print('Data: ${response.data}');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    super.onResponse(response, handler);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Log error details
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print(
-      '❌ ERROR[${err.response?.statusCode}] => URL: ${err.requestOptions.baseUrl}${err.requestOptions.path}',
-    );
-    print('Message: ${err.message}');
-    print('Response: ${err.response?.data}');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    super.onError(err, handler);
-  }
-}
+/// Standard API Interceptor
+class ApiInterceptor extends Interceptor {}
 
 /// Authentication Interceptor
 /// Automatically adds authentication token to requests and refreshes expired tokens
@@ -89,9 +50,7 @@ class AuthInterceptor extends Interceptor {
           return DateTime.now().toUtc().isAfter(expiryDate);
         }
       }
-    } catch (e) {
-      print('⚠️ Error decoding token expiration: $e');
-    }
+    } catch (_) {}
     return false;
   }
 
@@ -99,9 +58,7 @@ class AuthInterceptor extends Interceptor {
     try {
       final token = await secureStorage.read(key: 'refresh_token');
       if (token != null && token.isNotEmpty) return token;
-    } catch (e) {
-      print('⚠️ secureStorage read error for refresh_token: $e');
-    }
+    } catch (_) {}
     final cachedUserStr = prefs.getString('CACHED_USER');
     if (cachedUserStr != null) {
       try {
@@ -121,7 +78,6 @@ class AuthInterceptor extends Interceptor {
   ) async {
     // If a refresh is currently running, wait for it before proceeding
     if (_refreshCompleter != null && !_refreshCompleter!.isCompleted) {
-      print('⏳ Waiting for in-flight token refresh before sending ${options.path}...');
       final newToken = await _refreshCompleter!.future;
       if (newToken != null && newToken.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $newToken';
@@ -143,14 +99,11 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
-    print('🔒 Session expired or unauthorized. Clearing credentials & redirecting to Login screen...');
     try {
       await secureStorage.delete(key: 'access_token');
       await secureStorage.delete(key: 'refresh_token');
       await prefs.remove('CACHED_USER');
-    } catch (e) {
-      print('⚠️ Failed to clear session data: $e');
-    }
+    } catch (_) {}
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
@@ -178,11 +131,9 @@ class AuthInterceptor extends Interceptor {
             currentLoc == Routes.profile;
 
         if (!isAuthPage && !isMainBrowsingPage) {
-          print('🚀 Redirecting to ${Routes.login} from $currentLoc');
           AppRouter.router.go(Routes.login);
         }
       } catch (e) {
-        print('⚠️ Navigation to login failed: $e');
         try {
           AppRouter.router.go(Routes.login);
         } catch (_) {}
@@ -205,14 +156,10 @@ class AuthInterceptor extends Interceptor {
         authHeader.trim() != 'Bearer null';
 
     if (err.response?.statusCode == 401 && !isAuthRoute && hadBearerToken) {
-      print('🔄 401 Unauthorized received on $path, attempting token refresh...');
-
       // If a refresh is already in progress, await its result
       if (_refreshCompleter != null) {
-        print('⏳ Refresh already in progress, awaiting result for $path...');
         final newAccessToken = await _refreshCompleter!.future;
         if (newAccessToken != null && newAccessToken.isNotEmpty) {
-          print('🔁 Retrying original request $path with freshly acquired token...');
           return _retryRequest(err.requestOptions, newAccessToken, handler);
         } else {
           return super.onError(err, handler);
@@ -225,7 +172,6 @@ class AuthInterceptor extends Interceptor {
         final refreshToken = await _getRefreshToken();
 
         if (refreshToken == null || refreshToken.isEmpty) {
-          print('⚠️ No refresh token available in storage to renew session.');
           _refreshCompleter?.complete(null);
           _refreshCompleter = null;
           await _handleSessionExpired();
@@ -233,7 +179,6 @@ class AuthInterceptor extends Interceptor {
         }
 
         if (_isJwtExpired(refreshToken)) {
-          print('🔒 Refresh token is expired by timestamp. Clearing session credentials.');
           _refreshCompleter?.complete(null);
           _refreshCompleter = null;
           await _handleSessionExpired();
@@ -278,7 +223,6 @@ class AuthInterceptor extends Interceptor {
                   refreshToken;
 
           if (newAccessToken != null && newAccessToken.isNotEmpty) {
-            print('✅ Token refreshed successfully!');
             try {
               await secureStorage.write(
                 key: 'access_token',
@@ -288,9 +232,7 @@ class AuthInterceptor extends Interceptor {
                 key: 'refresh_token',
                 value: newRefreshToken,
               );
-            } catch (e) {
-              print('⚠️ Failed to write tokens to secure storage: $e');
-            }
+            } catch (_) {}
 
             final cachedUserStr = prefs.getString('CACHED_USER');
             if (cachedUserStr != null) {
@@ -314,12 +256,6 @@ class AuthInterceptor extends Interceptor {
           'Access token missing in refresh response: ${response.data}',
         );
       } catch (e) {
-        print('❌ AuthInterceptor Refresh Token Failed: $e');
-        if (e is DioException) {
-          print('❌ Refresh Response status: ${e.response?.statusCode}');
-          print('❌ Refresh Response data: ${e.response?.data}');
-        }
-
         final completer = _refreshCompleter;
         _refreshCompleter = null;
         completer?.complete(null);

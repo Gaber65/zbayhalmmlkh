@@ -29,7 +29,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onProductTap(BuildContext context, Product product) {
-    if (product.isCarcass || product.effectivePortions.isNotEmpty) {
+    if (product.isCarcass && product.effectivePortions.length > 1) {
       context.push(Routes.carcassPortions, extra: product);
     } else {
       context.push(Routes.productDetails, extra: product);

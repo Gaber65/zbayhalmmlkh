@@ -288,7 +288,7 @@ class _CategoriesMobileViewState extends State<CategoriesMobileView> {
   }
 
   void _onProductDetailTap(BuildContext context, Product product) {
-    if (product.isCarcass || product.effectivePortions.isNotEmpty) {
+    if (product.isCarcass && product.effectivePortions.length > 1) {
       context.push(Routes.carcassPortions, extra: product);
     } else {
       context.push(Routes.productDetails, extra: product);
@@ -341,8 +341,21 @@ class _CategoriesMobileViewState extends State<CategoriesMobileView> {
       isAuthenticated = context.read<AuthCubit>().state is AuthAuthenticated;
     } catch (_) {}
 
+    if (!isAuthenticated) {
+      _showKingdomToast(
+        context,
+        kTr(
+          context,
+          'يرجى تسجيل الدخول أولاً لإضافة المنتجات إلى السلة',
+          'Please login first to add items to cart',
+        ),
+      );
+      context.push(Routes.login);
+      return;
+    }
+
     final cartCubit = _resolveCartCubit(context);
-    if (isAuthenticated && cartCubit != null) {
+    if (cartCubit != null) {
       cartCubit.addToCart(
         productId: product.id,
         quantity: quantity,

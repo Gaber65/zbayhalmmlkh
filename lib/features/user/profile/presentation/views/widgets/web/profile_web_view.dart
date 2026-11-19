@@ -11,6 +11,7 @@ import 'package:dhabayih_lmamlaka/features/user/profile/domain/entities/profile.
 import 'package:dhabayih_lmamlaka/features/user/profile/presentation/manager/profile_cubit.dart';
 import 'package:dhabayih_lmamlaka/features/user/profile/presentation/manager/profile_state.dart';
 import '../edit_profile_bottom_sheet.dart';
+import '../delete_account_dialog.dart';
 
 class ProfileWebView extends StatelessWidget {
   final ProfileState state;
@@ -238,6 +239,24 @@ class ProfileWebView extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () => showDeleteAccountConfirmationDialog(context),
+                icon: Icon(Icons.delete_forever_outlined, color: colorScheme.error),
+                label: Text(
+                  S.of(context).delete_account,
+                  style: theme.textTheme.titleSmall?.copyWith(color: colorScheme.error),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

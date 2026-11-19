@@ -46,9 +46,7 @@ class AuthRepositoryImpl implements AuthRepository {
           deviceType: deviceType,
         );
       }
-    } catch (e) {
-      print('FCM Token registration error after OTP verification: $e');
-    }
+    } catch (_) {}
   }
 
   @override
@@ -74,30 +72,13 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, User>> verifyLoginOtp(String email, String otp) async {
     try {
-      print('========== VERIFY LOGIN OTP ==========');
-      print('Email: $email');
-      print('OTP: $otp');
-
       final userModel = await remoteDataSource.verifyLoginOtp(email, otp);
-
-      print('API Response: ${userModel.toJson()}');
-
       await localDataSource.cacheUser(userModel);
-
-      print('User cached successfully.');
-
       await _registerFcmDeviceToken();
-
-      print('FCM device registered.');
-
       return Right(userModel.toDomain());
     } on ServerException catch (e) {
-      print('ServerException: ${e.errorMessageModel.message}');
       return Left(ServerFailure(e.errorMessageModel));
-    } catch (e, s) {
-      print('Exception: $e');
-      print(s);
-
+    } catch (e) {
       return Left(
         ServerFailure(
           ErrorMessageModel(
@@ -117,30 +98,13 @@ class AuthRepositoryImpl implements AuthRepository {
     String otp,
   ) async {
     try {
-      print('========== VERIFY REGISTER OTP ==========');
-      print('Email: $email');
-      print('OTP: $otp');
-
       final userModel = await remoteDataSource.verifyRegisterOtp(email, otp);
-
-      print('API Response: ${userModel.toJson()}');
-
       await localDataSource.cacheUser(userModel);
-
-      print('User cached successfully.');
-
       await _registerFcmDeviceToken();
-
-      print('FCM device registered.');
-
       return Right(userModel.toDomain());
     } on ServerException catch (e) {
-      print('ServerException: ${e.errorMessageModel.message}');
       return Left(ServerFailure(e.errorMessageModel));
-    } catch (e, s) {
-      print('Exception: $e');
-      print(s);
-
+    } catch (e) {
       return Left(
         ServerFailure(
           ErrorMessageModel(

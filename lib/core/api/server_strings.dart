@@ -7,6 +7,7 @@ class ServerStrings {
   static const String login = '/api/v1/auth/login';
   static const String profile = '/api/v1/me';
   static const String updateProfile = '/api/v1/me';
+  static const String deleteAccount = '/api/v1/me';
   static const String refreshToken = '/api/v1/auth/refresh';
 
   static const String logout = '/api/v1/auth/logout';

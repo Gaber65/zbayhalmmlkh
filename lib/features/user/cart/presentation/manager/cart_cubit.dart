@@ -4,7 +4,7 @@ import '../../domain/entities/cart.dart';
 import '../../domain/repositories/cart_repository.dart';
 import 'cart_state.dart';
 
-@injectable
+@lazySingleton
 class CartCubit extends Cubit<CartState> {
   final CartRepository repository;
 

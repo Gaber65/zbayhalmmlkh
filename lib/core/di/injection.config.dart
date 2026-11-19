@@ -180,7 +180,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i424.ProfileRemoteDataSource>(
       () => _i424.ProfileRemoteDataSourceImpl(dio: gh<_i361.Dio>()),
     );
-    gh.factory<_i865.CartCubit>(
+    gh.lazySingleton<_i865.CartCubit>(
       () => _i865.CartCubit(repository: gh<_i687.CartRepository>()),
     );
     gh.lazySingleton<_i461.SearchRemoteDataSource>(

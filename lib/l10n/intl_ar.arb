@@ -292,5 +292,11 @@
   "time_slot_evening": "ليلي (٥:٠٠ م - ١٠:٠٠ م)",
   "today": "اليوم",
   "tomorrow": "غداً",
-  "custom_date": "تحديد تاريخ"
+  "custom_date": "تحديد تاريخ",
+  "delete_account": "حذف الحساب",
+  "delete_account_confirm_title": "حذف الحساب نهائياً",
+  "delete_account_confirm_message": "هل أنت متأكد من رغبتك في حذف حسابك؟ سيتم حذف بياناتك الشخصية وعناوينك المحفوظة نهائياً ولا يمكن التراجع عن هذا الإجراء.",
+  "delete_account_confirm_button": "نعم، احذف الحساب",
+  "delete_account_success": "تم حذف حسابك بنجاح",
+  "cancel": "إلغاء"
 }

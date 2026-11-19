@@ -48,4 +48,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
       return Left(ServerFailure(ErrorMessageModel(message: e.toString(), errors: [], success: false, statusCode: 500)));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteAccount() async {
+    try {
+      await remoteDataSource.deleteAccount();
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.errorMessageModel));
+    } catch (e) {
+      return Left(ServerFailure(ErrorMessageModel(message: e.toString(), errors: [], success: false, statusCode: 500)));
+    }
+  }
 }
